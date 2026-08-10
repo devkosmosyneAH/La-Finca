@@ -1424,40 +1424,74 @@ class _HomePageState extends State<HomePage>
     return Container(
       color: const Color(0xFF0D2D26),
       padding: EdgeInsets.fromLTRB(mobile ? 24 : 72, 34, mobile ? 24 : 72, 34),
-      child: Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 20,
-        runSpacing: 18,
+      child: Column(
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _profileLogo(34),
-              const SizedBox(width: 10),
-              const Text('LA FINCA',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 3,
-                      fontSize: 17)),
-            ],
-          ),
-          if (!mobile)
-            const Text('Spa · Glamping · Recepciones',
-                style: TextStyle(color: Color(0xFF9FB9AB), fontSize: 12)),
           Wrap(
-            spacing: 2,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 20,
+            runSpacing: 18,
             children: [
-              _socialButton(
-                  'Instagram', Icons.camera_alt_rounded, _openInstagram),
-              _socialButton('WhatsApp', Icons.chat_rounded, _whatsapp),
-              _socialButton('Maps', Icons.map_rounded, _openMaps),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _profileLogo(34),
+                  const SizedBox(width: 10),
+                  const Text('LA FINCA',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 3,
+                          fontSize: 17)),
+                ],
+              ),
+              if (!mobile)
+                const Text('Spa · Glamping · Recepciones',
+                    style: TextStyle(color: Color(0xFF9FB9AB), fontSize: 12)),
+              Wrap(
+                spacing: 2,
+                children: [
+                  _socialButton(
+                      'Instagram', Icons.camera_alt_rounded, _openInstagram),
+                  _socialButton('WhatsApp', Icons.chat_rounded, _whatsapp),
+                  _socialButton('Maps', Icons.map_rounded, _openMaps),
+                ],
+              ),
+              const Text('© 2026 · Limón Indanza',
+                  style: TextStyle(color: Color(0xFF9FB9AB), fontSize: 12)),
             ],
           ),
-          const Text('© 2026 · Limón Indanza',
-              style: TextStyle(color: Color(0xFF9FB9AB), fontSize: 12)),
+          const SizedBox(height: 22),
+          const Divider(color: Color(0xFF315348), height: 1),
+          const SizedBox(height: 13),
+          Align(
+            alignment: mobile ? Alignment.center : Alignment.centerRight,
+            child: _developerCredit(),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _developerCredit() {
+    return TextButton.icon(
+      onPressed: _openDeveloper,
+      icon: const Icon(Icons.auto_awesome_rounded, size: 14),
+      label: const Text.rich(
+        TextSpan(children: [
+          TextSpan(text: 'Desarrollado por  '),
+          TextSpan(
+              text: 'DEVKOSMYNE',
+              style: TextStyle(
+                  color: Color(0xFFE6C68A),
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w800)),
+        ]),
+      ),
+      style: TextButton.styleFrom(
+        foregroundColor: const Color(0xFF9FB9AB),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        textStyle: const TextStyle(fontSize: 10, letterSpacing: .15),
       ),
     );
   }
@@ -1524,6 +1558,12 @@ class _HomePageState extends State<HomePage>
       _showMessage('Instagram',
           'Visita @lafinca.spa en Instagram para conocer novedades de LA FINCA.');
     }
+  }
+
+  Future<void> _openDeveloper() async {
+    final uri =
+        Uri.parse('https://devkosmosyneah.github.io/devkosmosyne-website/');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Future<void> _openMaps() async {
