@@ -115,6 +115,7 @@ class _HomePageState extends State<HomePage>
                   SliverToBoxAdapter(child: _glampingSection(mobile)),
                   SliverToBoxAdapter(child: _eventsSection(mobile)),
                   SliverToBoxAdapter(child: _locationSection(mobile)),
+                  SliverToBoxAdapter(child: _instagramSection(mobile)),
                   SliverToBoxAdapter(child: _testimonial()),
                   SliverToBoxAdapter(child: _reservationSection(mobile)),
                   SliverToBoxAdapter(child: _footer(mobile)),
@@ -910,6 +911,131 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  Widget _instagramSection(bool mobile) {
+    return Container(
+      color: const Color(0xFFFBF8F2),
+      padding: EdgeInsets.fromLTRB(24, mobile ? 64 : 76, 24, mobile ? 64 : 76),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1180),
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            runSpacing: 30,
+            children: [
+              SizedBox(
+                width: mobile ? double.infinity : 540,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _eyebrow('LA FINCA EN INSTAGRAM'),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Un lugar para\ndesconectarte.',
+                      style: TextStyle(
+                        color: forest,
+                        fontSize: mobile ? 37 : 44,
+                        height: 1.05,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Descubre nuestros espacios, sabores y celebraciones en el perfil oficial de LA FINCA. Síguenos para enterarte de novedades, promociones y del próximo lanzamiento de glamping.',
+                      style: TextStyle(
+                          color: Color(0xFF69736B), fontSize: 16, height: 1.6),
+                    ),
+                    const SizedBox(height: 26),
+                    _primaryButton('Visitar @lafinca.spa',
+                        Icons.camera_alt_rounded, _openInstagram),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: mobile ? double.infinity : 450,
+                child: Container(
+                  padding: EdgeInsets.all(mobile ? 26 : 32),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(26),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF173F35), Color(0xFF734E4D)],
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                          color: Color(0x220D2D26),
+                          blurRadius: 24,
+                          offset: Offset(0, 10)),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(11),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: .16),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: const Icon(Icons.camera_alt_rounded,
+                                color: Colors.white, size: 25),
+                          ),
+                          const SizedBox(width: 14),
+                          const Expanded(
+                            child: Text('@lafinca.spa',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                          const Icon(Icons.verified_rounded,
+                              color: Color(0xFFE9C47A), size: 20),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      const Text('SPA · GASTRONOMÍA · EVENTOS',
+                          style: TextStyle(
+                              color: Color(0xFFE9C47A),
+                              fontSize: 11,
+                              letterSpacing: 1.4,
+                              fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 12),
+                      const Text(
+                          'Glamping próximamente · Limón Indanza, Morona Santiago',
+                          style: TextStyle(
+                              color: Colors.white, fontSize: 16, height: 1.45)),
+                      const SizedBox(height: 24),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: ['Desconexión', 'Buena mesa', 'Celebraciones']
+                            .map(
+                              (tag) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 11, vertical: 7),
+                                decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: .12),
+                                    borderRadius: BorderRadius.circular(30)),
+                                child: Text(tag,
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 12)),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _testimonial() {
     return Container(
       color: pale,
@@ -1050,6 +1176,15 @@ class _HomePageState extends State<HomePage>
         child: Text(text,
             style:
                 const TextStyle(color: forest, fontWeight: FontWeight.bold)));
+  }
+
+  Future<void> _openInstagram() async {
+    final uri = Uri.parse('https://www.instagram.com/lafinca.spa/');
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
+        mounted) {
+      _showMessage('Instagram',
+          'Visita @lafinca.spa en Instagram para conocer novedades de LA FINCA.');
+    }
   }
 
   Future<void> _openMaps() async {
