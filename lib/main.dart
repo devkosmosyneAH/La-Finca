@@ -45,8 +45,10 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   final _scrollController = ScrollController();
+  late final AnimationController _mapPulseController;
   final _experienciasKey = GlobalKey();
   final _glampingKey = GlobalKey();
   final _eventosKey = GlobalKey();
@@ -56,6 +58,15 @@ class _HomePageState extends State<HomePage> {
   static const forest = Color(0xFF173F35);
   static const pale = Color(0xFFE9E5D9);
   static const gold = Color(0xFFC8954B);
+
+  @override
+  void initState() {
+    super.initState();
+    _mapPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+  }
 
   void _goTo(GlobalKey key) {
     final target = key.currentContext;
@@ -70,6 +81,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _mapPulseController.dispose();
     super.dispose();
   }
 
@@ -148,81 +160,93 @@ class _HomePageState extends State<HomePage> {
   Widget _hero(bool mobile) {
     final compact = MediaQuery.sizeOf(context).width < 380;
     final titleSize = mobile ? (compact ? 39.0 : 47.0) : 74.0;
-    return Container(
-      constraints:
-          BoxConstraints(minHeight: mobile ? (compact ? 650 : 680) : 700),
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: NetworkImage(
-            'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=1900&q=85',
-          ),
-          fit: BoxFit.cover,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 1100),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, 18 * (1 - value)),
+          child: child,
         ),
       ),
       child: Container(
-        padding:
-            EdgeInsets.fromLTRB(mobile ? 24 : 72, 34, mobile ? 24 : 72, 54),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [
-              Colors.black.withValues(alpha: .78),
-              Colors.black.withValues(alpha: .20)
-            ],
+        constraints:
+            BoxConstraints(minHeight: mobile ? (compact ? 650 : 680) : 700),
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage(
+              'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=1900&q=85',
+            ),
+            fit: BoxFit.cover,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _heroHeader(mobile, compact),
-            SizedBox(height: mobile ? (compact ? 142 : 168) : 235),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Text(
-                'El lugar donde\nlos buenos momentos\ntoman forma.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: titleSize,
-                  height: .98,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -2,
-                ),
-              ),
-            ),
-            const SizedBox(height: 22),
-            const Text(
-              'Spa · Glamping · Piscinas · Gastronomía · Eventos',
-              style: TextStyle(
-                  color: Color(0xFFF1D6A2),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 32),
-            Wrap(
-              spacing: 14,
-              runSpacing: 12,
-              children: [
-                _primaryButton('Reservar ahora', Icons.calendar_month_rounded,
-                    () => _goTo(_reservasKey)),
-                _outlineButton(
-                    'Conocer experiencias', () => _goTo(_experienciasKey)),
+        child: Container(
+          padding:
+              EdgeInsets.fromLTRB(mobile ? 24 : 72, 34, mobile ? 24 : 72, 54),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                Colors.black.withValues(alpha: .78),
+                Colors.black.withValues(alpha: .20)
               ],
             ),
-            const SizedBox(height: 36),
-            const Row(
-              children: [
-                Icon(Icons.star_rounded, color: Color(0xFFF1C36C), size: 20),
-                SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    '4.7 / 5 en Google · experiencias que dejan huella',
-                    style: TextStyle(color: Colors.white, fontSize: 13),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _heroHeader(mobile, compact),
+              SizedBox(height: mobile ? (compact ? 142 : 168) : 235),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Text(
+                  'El lugar donde\nlos buenos momentos\ntoman forma.',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: titleSize,
+                    height: .98,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -2,
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 22),
+              const Text(
+                'Spa · Glamping · Piscinas · Gastronomía · Eventos',
+                style: TextStyle(
+                    color: Color(0xFFF1D6A2),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 32),
+              Wrap(
+                spacing: 14,
+                runSpacing: 12,
+                children: [
+                  _primaryButton('Reservar ahora', Icons.calendar_month_rounded,
+                      () => _goTo(_reservasKey)),
+                  _outlineButton(
+                      'Conocer experiencias', () => _goTo(_experienciasKey)),
+                ],
+              ),
+              const SizedBox(height: 36),
+              const Row(
+                children: [
+                  Icon(Icons.star_rounded, color: Color(0xFFF1C36C), size: 20),
+                  SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '4.7 / 5 en Google · experiencias que dejan huella',
+                      style: TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -409,45 +433,60 @@ class _HomePageState extends State<HomePage> {
 
   Widget _imageCard(
       String label, String title, String text, IconData icon, String image) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
-      child: Container(
-        height: 360,
-        decoration: BoxDecoration(
-            image:
-                DecorationImage(image: NetworkImage(image), fit: BoxFit.cover)),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 850),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, 22 * (1 - value)),
+          child: child,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
         child: Container(
-          padding: const EdgeInsets.all(24),
+          height: 360,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black.withValues(alpha: .86)],
+              image: DecorationImage(
+                  image: NetworkImage(image), fit: BoxFit.cover)),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: .86)
+                ],
+              ),
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: const Color(0xFFE9C47A), size: 28),
-              const SizedBox(height: 12),
-              Text(label,
-                  style: const TextStyle(
-                      color: Color(0xFFE9C47A),
-                      fontSize: 11,
-                      letterSpacing: 1.5,
-                      fontWeight: FontWeight.bold)),
-              const SizedBox(height: 5),
-              Text(title,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold)),
-              const SizedBox(height: 7),
-              Text(text,
-                  style: const TextStyle(
-                      color: Color(0xFFE9E9E3), fontSize: 13, height: 1.4)),
-            ],
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: const Color(0xFFE9C47A), size: 28),
+                const SizedBox(height: 12),
+                Text(label,
+                    style: const TextStyle(
+                        color: Color(0xFFE9C47A),
+                        fontSize: 11,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 5),
+                Text(title,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 7),
+                Text(text,
+                    style: const TextStyle(
+                        color: Color(0xFFE9E9E3), fontSize: 13, height: 1.4)),
+              ],
+            ),
           ),
         ),
       ),
@@ -677,6 +716,8 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _mapPreview(mobile),
+                      const SizedBox(height: 22),
                       Row(
                         children: [
                           Container(
@@ -731,6 +772,110 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _mapPreview(bool mobile) {
+    const centerX = 4620;
+    const centerY = 8328;
+    final tiles = <Widget>[];
+    for (var row = -1; row <= 1; row++) {
+      for (var column = -1; column <= 1; column++) {
+        final tileX = centerX + column;
+        final tileY = centerY + row;
+        tiles.add(Positioned(
+          left: (column + 1) * 256,
+          top: (row + 1) * 256,
+          width: 256,
+          height: 256,
+          child: Image.network(
+            'https://tile.openstreetmap.org/14/$tileX/$tileY.png',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+                Container(color: const Color(0xFFD8E3D8)),
+          ),
+        ));
+      }
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: SizedBox(
+        height: mobile ? 190 : 210,
+        width: double.infinity,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ColoredBox(
+              color: const Color(0xFFD8E3D8),
+              child: FittedBox(
+                fit: BoxFit.cover,
+                clipBehavior: Clip.hardEdge,
+                child: SizedBox(
+                  width: 768,
+                  height: 768,
+                  child: Stack(children: tiles),
+                ),
+              ),
+            ),
+            Center(
+              child: AnimatedBuilder(
+                animation: _mapPulseController,
+                builder: (context, child) => Transform.scale(
+                  scale: .92 + (_mapPulseController.value * .12),
+                  child: child,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE4B96A),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: const [
+                      BoxShadow(
+                          color: Color(0x550D2D26),
+                          blurRadius: 12,
+                          offset: Offset(0, 4)),
+                    ],
+                  ),
+                  child: const Icon(Icons.spa_rounded, color: forest, size: 18),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 14,
+              bottom: 14,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .92),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Text('LA FINCA · Limón Indanza',
+                      style: TextStyle(
+                          color: forest,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 12,
+              top: 12,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                    color: forest.withValues(alpha: .88),
+                    shape: BoxShape.circle),
+                child: const Padding(
+                  padding: EdgeInsets.all(9),
+                  child: Icon(Icons.map_rounded, color: Colors.white, size: 17),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
