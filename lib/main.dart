@@ -75,34 +75,40 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final mobile = constraints.maxWidth < 820;
-          return CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverToBoxAdapter(child: _topBar(mobile)),
-              SliverToBoxAdapter(child: _hero(mobile)),
-              SliverToBoxAdapter(child: _trustStrip(mobile)),
-              SliverToBoxAdapter(
-                child: _section(
-                  key: _experienciasKey,
-                  mobile: mobile,
-                  eyebrow: 'UNA PAUSA QUE SÍ SE SIENTE',
-                  title: 'Mucho más que un día de spa',
-                  subtitle:
-                      'Naturaleza, agua, buena mesa y espacios para celebrar. Diseñamos experiencias para desconectar de la rutina y volver con historias que contar.',
-                  child: _experienceCards(mobile),
-                ),
-              ),
-              SliverToBoxAdapter(child: _glampingSection(mobile)),
-              SliverToBoxAdapter(child: _eventsSection(mobile)),
-              SliverToBoxAdapter(child: _testimonial()),
-              SliverToBoxAdapter(child: _reservationSection(mobile)),
-              SliverToBoxAdapter(child: _footer(mobile)),
-            ],
-          );
-        },
+      body: ColoredBox(
+        color: LaFincaApp.forest,
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final mobile = constraints.maxWidth < 820;
+              return CustomScrollView(
+                controller: _scrollController,
+                physics: const ClampingScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(child: _topBar(mobile)),
+                  SliverToBoxAdapter(child: _hero(mobile)),
+                  SliverToBoxAdapter(child: _trustStrip(mobile)),
+                  SliverToBoxAdapter(
+                    child: _section(
+                      key: _experienciasKey,
+                      mobile: mobile,
+                      eyebrow: 'UNA PAUSA QUE SÍ SE SIENTE',
+                      title: 'Mucho más que un día de spa',
+                      subtitle:
+                          'Naturaleza, agua, buena mesa y espacios para celebrar. Diseñamos experiencias para desconectar de la rutina y volver con historias que contar.',
+                      child: _experienceCards(mobile),
+                    ),
+                  ),
+                  SliverToBoxAdapter(child: _glampingSection(mobile)),
+                  SliverToBoxAdapter(child: _eventsSection(mobile)),
+                  SliverToBoxAdapter(child: _testimonial()),
+                  SliverToBoxAdapter(child: _reservationSection(mobile)),
+                  SliverToBoxAdapter(child: _footer(mobile)),
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -138,8 +144,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _hero(bool mobile) {
+    final compact = MediaQuery.sizeOf(context).width < 380;
+    final titleSize = mobile ? (compact ? 39.0 : 47.0) : 74.0;
     return Container(
-      constraints: BoxConstraints(minHeight: mobile ? 680 : 700),
+      constraints:
+          BoxConstraints(minHeight: mobile ? (compact ? 650 : 680) : 700),
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: NetworkImage(
@@ -164,15 +173,15 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _heroHeader(mobile),
-            SizedBox(height: mobile ? 168 : 235),
+            _heroHeader(mobile, compact),
+            SizedBox(height: mobile ? (compact ? 142 : 168) : 235),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 720),
               child: Text(
                 'El lugar donde\nlos buenos momentos\ntoman forma.',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: mobile ? 47 : 74,
+                  fontSize: titleSize,
                   height: .98,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -2,
@@ -217,7 +226,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _heroHeader(bool mobile) {
+  Widget _heroHeader(bool mobile, bool compact) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -226,20 +235,22 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w900,
-              letterSpacing: 4,
-              fontSize: 22),
+              letterSpacing: 3.5,
+              fontSize: 21),
         ),
-        const SizedBox(width: 12),
-        Container(width: 1, height: 24, color: const Color(0xFFE6C68A)),
-        const SizedBox(width: 12),
-        const Padding(
-          padding: EdgeInsets.only(top: 5),
-          child: Text(
-            'SPA & RECEPCIONES',
-            style: TextStyle(
-                color: Color(0xFFE6C68A), letterSpacing: 1.5, fontSize: 11),
+        if (!compact) ...[
+          const SizedBox(width: 12),
+          Container(width: 1, height: 24, color: const Color(0xFFE6C68A)),
+          const SizedBox(width: 12),
+          const Padding(
+            padding: EdgeInsets.only(top: 5),
+            child: Text(
+              'SPA & RECEPCIONES',
+              style: TextStyle(
+                  color: Color(0xFFE6C68A), letterSpacing: 1.5, fontSize: 11),
+            ),
           ),
-        ),
+        ],
         const Spacer(),
         if (!mobile)
           Wrap(
