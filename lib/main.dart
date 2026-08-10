@@ -58,6 +58,8 @@ class _HomePageState extends State<HomePage>
   static const forest = Color(0xFF173F35);
   static const pale = Color(0xFFE9E5D9);
   static const gold = Color(0xFFC8954B);
+  static const instagramProfileImage =
+      'https://scontent.cdninstagram.com/v/t51.2885-19/461707362_1617025179237818_5887856438543862324_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=100&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy41ODUuQzIifQ%3D%3D&_nc_ohc=gniTo1hTEUEQ7kNvwFqfJBJ&_nc_oc=AdrmhjRNdgSQeH8qtQrTkZbNFy5D-pDmDnBAAMxYrfhOLr1Av1-TyvkDFQksoWW_hGo&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_ss=72a02&oh=00_AQFbARdwkgwl0Gn8AmRZdW2pFidw997-GpuHFJ3F3qUDOA&oe=6A7F178C';
 
   @override
   void initState() {
@@ -257,6 +259,8 @@ class _HomePageState extends State<HomePage>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _profileLogo(compact ? 34 : 40),
+        const SizedBox(width: 10),
         const Text(
           'LA FINCA',
           style: TextStyle(
@@ -291,6 +295,23 @@ class _HomePageState extends State<HomePage>
             ],
           ),
       ],
+    );
+  }
+
+  Widget _profileLogo(double size) {
+    return ClipOval(
+      child: Image.network(
+        instagramProfileImage,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: size,
+          height: size,
+          color: gold,
+          child: Icon(Icons.spa_rounded, color: forest, size: size * .52),
+        ),
+      ),
     );
   }
 
@@ -912,8 +933,6 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _instagramSection(bool mobile) {
-    const profileImage =
-        'https://scontent.cdninstagram.com/v/t51.2885-19/461707362_1617025179237818_5887856438543862324_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=100&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy41ODUuQzIifQ%3D%3D&_nc_ohc=gniTo1hTEUEQ7kNvwFqfJBJ&_nc_oc=AdrmhjRNdgSQeH8qtQrTkZbNFy5D-pDmDnBAAMxYrfhOLr1Av1-TyvkDFQksoWW_hGo&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_ss=72a02&oh=00_AQFbARdwkgwl0Gn8AmRZdW2pFidw997-GpuHFJ3F3qUDOA&oe=6A7F178C';
     return Container(
       color: const Color(0xFFFBF8F2),
       padding: EdgeInsets.fromLTRB(24, mobile ? 64 : 76, 24, mobile ? 64 : 76),
@@ -977,7 +996,7 @@ class _HomePageState extends State<HomePage>
                         children: [
                           ClipOval(
                             child: Image.network(
-                              profileImage,
+                              instagramProfileImage,
                               width: 56,
                               height: 56,
                               fit: BoxFit.cover,
@@ -1129,18 +1148,47 @@ class _HomePageState extends State<HomePage>
         spacing: 20,
         runSpacing: 18,
         children: [
-          const Text('LA FINCA',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 3,
-                  fontSize: 17)),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _profileLogo(34),
+              const SizedBox(width: 10),
+              const Text('LA FINCA',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 3,
+                      fontSize: 17)),
+            ],
+          ),
           if (!mobile)
             const Text('Spa · Glamping · Recepciones',
                 style: TextStyle(color: Color(0xFF9FB9AB), fontSize: 12)),
+          Wrap(
+            spacing: 2,
+            children: [
+              _socialButton(
+                  'Instagram', Icons.camera_alt_rounded, _openInstagram),
+              _socialButton('WhatsApp', Icons.chat_rounded, _whatsapp),
+              _socialButton('Maps', Icons.map_rounded, _openMaps),
+            ],
+          ),
           const Text('© 2026 · Limón Indanza',
               style: TextStyle(color: Color(0xFF9FB9AB), fontSize: 12)),
         ],
+      ),
+    );
+  }
+
+  Widget _socialButton(String label, IconData icon, VoidCallback action) {
+    return TextButton.icon(
+      onPressed: action,
+      icon: Icon(icon, size: 15),
+      label: Text(label),
+      style: TextButton.styleFrom(
+        foregroundColor: const Color(0xFFC8D6CD),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+        textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
       ),
     );
   }
