@@ -587,7 +587,7 @@ class _HomePageState extends State<HomePage>
                         ),
                         const SizedBox(height: 18),
                         const Text(
-                            'Tiempos aproximados por carretera; revísalos antes de salir según el estado de la vía.',
+                            'Distancias y tiempos referenciales; confírmalos antes de salir según la ruta y el estado de la vía.',
                             style: TextStyle(
                                 color: Color(0xFF738078),
                                 fontSize: 11,
