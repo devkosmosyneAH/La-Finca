@@ -912,6 +912,8 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _instagramSection(bool mobile) {
+    const profileImage =
+        'https://scontent.cdninstagram.com/v/t51.2885-19/461707362_1617025179237818_5887856438543862324_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=100&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy41ODUuQzIifQ%3D%3D&_nc_ohc=gniTo1hTEUEQ7kNvwFqfJBJ&_nc_oc=AdrmhjRNdgSQeH8qtQrTkZbNFy5D-pDmDnBAAMxYrfhOLr1Av1-TyvkDFQksoWW_hGo&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_ss=72a02&oh=00_AQFbARdwkgwl0Gn8AmRZdW2pFidw997-GpuHFJ3F3qUDOA&oe=6A7F178C';
     return Container(
       color: const Color(0xFFFBF8F2),
       padding: EdgeInsets.fromLTRB(24, mobile ? 64 : 76, 24, mobile ? 64 : 76),
@@ -973,14 +975,21 @@ class _HomePageState extends State<HomePage>
                     children: [
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(11),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: .16),
-                              borderRadius: BorderRadius.circular(15),
+                          ClipOval(
+                            child: Image.network(
+                              profileImage,
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                width: 56,
+                                height: 56,
+                                color: const Color(0xFF315D50),
+                                child: const Icon(Icons.camera_alt_rounded,
+                                    color: Colors.white, size: 25),
+                              ),
                             ),
-                            child: const Icon(Icons.camera_alt_rounded,
-                                color: Colors.white, size: 25),
                           ),
                           const SizedBox(width: 14),
                           const Expanded(
