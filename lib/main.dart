@@ -104,6 +104,7 @@ class _HomePageState extends State<HomePage>
   final _scrollController = ScrollController();
   late final AnimationController _mapPulseController;
   final _experienciasKey = GlobalKey();
+  final _amazoniaKey = GlobalKey();
   final _glampingKey = GlobalKey();
   final _eventosKey = GlobalKey();
   final _ubicacionKey = GlobalKey();
@@ -113,9 +114,6 @@ class _HomePageState extends State<HomePage>
   static const pale = Color(0xFFE9E5D9);
   static const gold = Color(0xFFC8954B);
   static const instagramAsset = 'assets/instagram/profile.jpg';
-  // ignore: unused_field
-  static const instagramProfileImage =
-      'https://scontent.cdninstagram.com/v/t51.2885-19/461707362_1617025179237818_5887856438543862324_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=100&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy41ODUuQzIifQ%3D%3D&_nc_ohc=gniTo1hTEUEQ7kNvwFqfJBJ&_nc_oc=AdrmhjRNdgSQeH8qtQrTkZbNFy5D-pDmDnBAAMxYrfhOLr1Av1-TyvkDFQksoWW_hGo&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_ss=72a02&oh=00_AQFbARdwkgwl0Gn8AmRZdW2pFidw997-GpuHFJ3F3qUDOA&oe=6A7F178C';
 
   @override
   void initState() {
@@ -159,14 +157,15 @@ class _HomePageState extends State<HomePage>
                   SliverToBoxAdapter(child: _topBar(mobile)),
                   SliverToBoxAdapter(child: _hero(mobile)),
                   SliverToBoxAdapter(child: _trustStrip(mobile)),
+                  SliverToBoxAdapter(child: _amazoniaSection(mobile)),
                   SliverToBoxAdapter(
                     child: _section(
                       key: _experienciasKey,
                       mobile: mobile,
-                      eyebrow: 'UNA PAUSA QUE SÍ SE SIENTE',
-                      title: 'Mucho más que un día de spa',
+                      eyebrow: 'EL PLAN QUE TE ESTABA FALTANDO',
+                      title: 'Aquí el descanso sí se convierte en recuerdo',
                       subtitle:
-                          'Naturaleza, agua, buena mesa y espacios para celebrar. Diseñamos experiencias para desconectar de la rutina y volver con historias que contar.',
+                          'No es solo venir a pasar el día: es sumergirte en piscinas, compartir buena comida y respirar la calma de la Amazonía. Tú llegas; nosotros nos encargamos del momento.',
                       child: _experienceCards(mobile),
                     ),
                   ),
@@ -260,7 +259,7 @@ class _HomePageState extends State<HomePage>
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 720),
                 child: Text(
-                  'El lugar donde\nlos buenos momentos\ntoman forma.',
+                  'La Amazonía que\nse disfruta sin\nprisa.',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: titleSize,
@@ -272,7 +271,7 @@ class _HomePageState extends State<HomePage>
               ),
               const SizedBox(height: 22),
               const Text(
-                'Spa · Glamping · Piscinas · Gastronomía · Eventos',
+                'PISCINAS · SPA · GLAMPING · GASTRONOMÍA · EVENTOS',
                 style: TextStyle(
                     color: Color(0xFFF1D6A2),
                     fontSize: 16,
@@ -290,15 +289,27 @@ class _HomePageState extends State<HomePage>
                 ],
               ),
               const SizedBox(height: 36),
+              Wrap(
+                spacing: 10,
+                runSpacing: 9,
+                children: const [
+                  _HeroPill(icon: Icons.pool_rounded, text: 'Piscinas'),
+                  _HeroPill(
+                      icon: Icons.local_parking_rounded, text: 'Parqueadero'),
+                  _HeroPill(
+                      icon: Icons.family_restroom_rounded,
+                      text: 'Ambiente familiar'),
+                ],
+              ),
+              const SizedBox(height: 18),
               const Row(
                 children: [
                   Icon(Icons.star_rounded, color: Color(0xFFF1C36C), size: 20),
                   SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      '4.7 / 5 en Google · experiencias que dejan huella',
-                      style: TextStyle(color: Colors.white, fontSize: 13),
-                    ),
+                        '4,7 / 5 en Google · un destino que invita a volver',
+                        style: TextStyle(color: Colors.white, fontSize: 13)),
                   ),
                 ],
               ),
@@ -342,19 +353,76 @@ class _HomePageState extends State<HomePage>
             spacing: 4,
             children: [
               _navButton('Experiencias', () => _goTo(_experienciasKey)),
+              _navButton('Amazonía', () => _goTo(_amazoniaKey)),
               _navButton('Glamping', () => _goTo(_glampingKey)),
               _navButton('Eventos', () => _goTo(_eventosKey)),
               _navButton('Ubicación', () => _goTo(_ubicacionKey)),
               _navButton('Reservas', () => _goTo(_reservasKey)),
             ],
-          ),
+          )
+        else
+          _mobileMenu(),
+      ],
+    );
+  }
+
+  Widget _mobileMenu() {
+    return PopupMenuButton<String>(
+      tooltip: 'Abrir menú',
+      icon: const Icon(Icons.menu_rounded, color: Colors.white),
+      color: const Color(0xFF173F35),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      onSelected: (value) {
+        switch (value) {
+          case 'experiencias':
+            _goTo(_experienciasKey);
+            break;
+          case 'amazonia':
+            _goTo(_amazoniaKey);
+            break;
+          case 'glamping':
+            _goTo(_glampingKey);
+            break;
+          case 'eventos':
+            _goTo(_eventosKey);
+            break;
+          case 'ubicacion':
+            _goTo(_ubicacionKey);
+            break;
+          case 'reservas':
+            _goTo(_reservasKey);
+            break;
+        }
+      },
+      itemBuilder: (context) => const [
+        PopupMenuItem(
+            value: 'experiencias',
+            child: Text('Experiencias', style: TextStyle(color: Colors.white))),
+        PopupMenuItem(
+            value: 'amazonia',
+            child: Text('Amazonía y clima',
+                style: TextStyle(color: Colors.white))),
+        PopupMenuItem(
+            value: 'glamping',
+            child: Text('Glamping', style: TextStyle(color: Colors.white))),
+        PopupMenuItem(
+            value: 'eventos',
+            child: Text('Eventos', style: TextStyle(color: Colors.white))),
+        PopupMenuItem(
+            value: 'ubicacion',
+            child: Text('Ubicación', style: TextStyle(color: Colors.white))),
+        PopupMenuItem(
+            value: 'reservas',
+            child: Text('Reservar',
+                style: TextStyle(
+                    color: Color(0xFFE9C47A), fontWeight: FontWeight.bold))),
       ],
     );
   }
 
   Widget _profileLogo(double size) {
     return ClipOval(
-      child: Image.network(
+      child: Image.asset(
         instagramAsset,
         width: size,
         height: size,
@@ -382,9 +450,13 @@ class _HomePageState extends State<HomePage>
 
   Widget _trustStrip(bool mobile) {
     final items = [
-      ('01', 'Naturaleza', 'Un entorno para bajar el ritmo'),
-      ('02', 'Experiencias', 'Planes para parejas y familias'),
-      ('03', 'Celebraciones', 'Tu evento, con nuestro sello'),
+      ('01', 'Amazonía viva', 'Naturaleza que se siente en cada rincón'),
+      ('02', 'Piscinas y calma', 'Un plan fresco para compartir sin apuro'),
+      (
+        '03',
+        'Llegas tranquilo',
+        'Parqueadero para visitantes y atención cercana'
+      ),
     ];
     return Container(
       color: pale,
@@ -428,6 +500,156 @@ class _HomePageState extends State<HomePage>
       ),
     );
   }
+
+  Widget _amazoniaSection(bool mobile) {
+    final routes = [
+      ('Cuenca', '110 km', '1 h 48 min', Icons.terrain_rounded),
+      ('Macas', '115 km', '1 h 30 min', Icons.route_rounded),
+      ('Guayaquil', '304 km', '4 h 50 min', Icons.directions_car_rounded),
+      ('Quito', '487 km', 'aprox. 10 h', Icons.travel_explore_rounded),
+    ];
+    return Container(
+      key: _amazoniaKey,
+      color: const Color(0xFFE8EFE7),
+      padding: EdgeInsets.fromLTRB(24, mobile ? 64 : 82, 24, mobile ? 64 : 82),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1180),
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            runSpacing: 36,
+            children: [
+              SizedBox(
+                width: mobile ? double.infinity : 500,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _eyebrow('EN EL CORAZÓN DE LA AMAZONÍA SUR'),
+                    const SizedBox(height: 14),
+                    Text('El clima perfecto para bajar las revoluciones.',
+                        style: TextStyle(
+                            color: forest,
+                            fontSize: mobile ? 35 : 44,
+                            height: 1.06,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -1)),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Limón Indanza tiene un clima cálido y húmedo de montaña amazónica: verde, fresco y vivo. Aquí una tarde de piscina, una comida compartida o una noche de glamping se sienten como una verdadera escapada.',
+                      style: TextStyle(
+                          color: Color(0xFF52645A), fontSize: 16, height: 1.6),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(children: [
+                      _climateStat(Icons.thermostat_rounded, '20–24 °C',
+                          'temperatura de referencia'),
+                      const SizedBox(width: 24),
+                      _climateStat(Icons.water_drop_rounded, 'Amazonía',
+                          'verde todo el año'),
+                    ]),
+                    const SizedBox(height: 26),
+                    _primaryButton(
+                        'Planear mi visita', Icons.map_rounded, _openMaps),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: mobile ? double.infinity : 570,
+                child: Container(
+                  padding: EdgeInsets.all(mobile ? 22 : 30),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(26),
+                    boxShadow: const [
+                      BoxShadow(
+                          color: Color(0x160D2D26),
+                          blurRadius: 22,
+                          offset: Offset(0, 10))
+                    ],
+                  ),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('ESTÁS MÁS CERCA DE LO QUE CREES',
+                            style: TextStyle(
+                                color: forest,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                                letterSpacing: 1.1)),
+                        const SizedBox(height: 20),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: routes
+                              .map((route) => _routeCard(mobile, route.$1,
+                                  route.$2, route.$3, route.$4))
+                              .toList(),
+                        ),
+                        const SizedBox(height: 18),
+                        const Text(
+                            'Tiempos aproximados por carretera; revísalos antes de salir según el estado de la vía.',
+                            style: TextStyle(
+                                color: Color(0xFF738078),
+                                fontSize: 11,
+                                height: 1.35)),
+                      ]),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _climateStat(IconData icon, String value, String label) => Expanded(
+        child: Row(children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: const BoxDecoration(
+                color: Color(0xFFCEE0D3), shape: BoxShape.circle),
+            child: Icon(icon, color: forest, size: 20),
+          ),
+          const SizedBox(width: 10),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(value,
+                style: const TextStyle(
+                    color: forest, fontSize: 16, fontWeight: FontWeight.w800)),
+            Text(label,
+                style: const TextStyle(color: Color(0xFF607168), fontSize: 11)),
+          ]),
+        ]),
+      );
+
+  Widget _routeCard(bool mobile, String city, String distance, String time,
+          IconData icon) =>
+      SizedBox(
+        width: mobile ? double.infinity : 244,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+              color: const Color(0xFFF7F5EF),
+              borderRadius: BorderRadius.circular(16)),
+          child: Row(children: [
+            Icon(icon, color: gold, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text('Desde $city',
+                      style: const TextStyle(
+                          color: forest,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14)),
+                  const SizedBox(height: 3),
+                  Text('$distance · $time',
+                      style: const TextStyle(
+                          color: Color(0xFF647169), fontSize: 12)),
+                ])),
+          ]),
+        ),
+      );
 
   Widget _section({
     required GlobalKey key,
@@ -480,29 +702,29 @@ class _HomePageState extends State<HomePage>
     final cards = [
       (
         'SPA & AGUA',
-        'Pausa profunda',
-        'Masajes, hidromasaje y momentos para volver a ti.',
+        'Tu pausa empieza aquí',
+        'Agua, descanso y un ambiente que te invita a soltar la rutina.',
         Icons.spa_rounded,
         'assets/instagram/aerial.jpg'
       ),
       (
         'GLAMPING',
-        'Dormir bajo las estrellas',
-        'Una escapada distinta, cómoda y conectada con la naturaleza.',
+        'Una noche para recordar',
+        'Próximamente: comodidad, naturaleza y el cielo amazónico como compañía.',
         Icons.nightlight_round,
         'assets/instagram/landscape.jpg'
       ),
       (
         'GASTRONOMÍA',
-        'Sabores para compartir',
-        'Planes completos para que solo tengas que disfrutar.',
+        'La mesa reúne todo',
+        'Buena comida y el espacio perfecto para compartir con los tuyos.',
         Icons.restaurant_rounded,
         'assets/instagram/people.jpg'
       ),
       (
         'PLAN CAMPIN',
-        'Una escapada desde \$15',
-        'Uso de instalaciones, menú seleccionado y zona de campin.',
+        'Tu escape desde \$15',
+        'Uso de instalaciones, menú seleccionado y zona de camping.',
         Icons.local_fire_department_rounded,
         'assets/instagram/campin.jpg'
       ),
@@ -600,7 +822,7 @@ class _HomePageState extends State<HomePage>
                   children: [
                     _eyebrow('NUEVA EXPERIENCIA'),
                     const SizedBox(height: 14),
-                    Text('Glamping para\nquedarte un poco más.',
+                    Text('Muy pronto:\nglamping en la Amazonía.',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: mobile ? 37 : 44,
@@ -608,7 +830,7 @@ class _HomePageState extends State<HomePage>
                             fontWeight: FontWeight.w800)),
                     const SizedBox(height: 18),
                     const Text(
-                        'Despierta con aire limpio, calma y el cielo como techo. La escapada perfecta para parejas, familias y quienes necesitan cambiar de paisaje.',
+                        'Cambia el ruido por grillos, aire limpio y una noche distinta. Estamos preparando una experiencia para parejas, familias y viajeros que quieren despertar rodeados de verde.',
                         style: TextStyle(
                             color: Color(0xFFC8D6CD),
                             fontSize: 16,
@@ -638,10 +860,10 @@ class _HomePageState extends State<HomePage>
                               fontWeight: FontWeight.bold)),
                       const SizedBox(height: 20),
                       ...[
-                        'Alojamiento con encanto',
-                        'Acceso a zonas de descanso',
+                        'Espacios pensados para desconectarte',
+                        'Piscinas y zonas para disfrutar el día',
                         'Opciones de spa y alimentación',
-                        'Atención cercana y personalizada'
+                        'Atención cercana desde tu llegada'
                       ].map(
                         (text) => Padding(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -708,7 +930,7 @@ class _HomePageState extends State<HomePage>
         ],
         _eyebrow('RECEPCIONES & EVENTOS'),
         const SizedBox(height: 14),
-        Text('Tu celebración merece un escenario especial.',
+        Text('Celebra en un lugar que todos van a recordar.',
             style: TextStyle(
                 color: forest,
                 fontSize: mobile ? 35 : 40,
@@ -716,7 +938,7 @@ class _HomePageState extends State<HomePage>
                 fontWeight: FontWeight.w800)),
         const SizedBox(height: 18),
         const Text(
-            'Bodas, cumpleaños, reuniones familiares y eventos corporativos. Cuéntanos tu idea y construyamos una propuesta a la medida.',
+            'Cumpleaños, reuniones familiares y eventos corporativos en un entorno amplio, verde y relajado. Cuéntanos tu idea y creemos un plan que se sienta hecho para ustedes.',
             style:
                 TextStyle(color: Color(0xFF69736B), fontSize: 16, height: 1.6)),
         const SizedBox(height: 26),
@@ -759,7 +981,7 @@ class _HomePageState extends State<HomePage>
                     ),
                     const SizedBox(height: 18),
                     const Text(
-                      'LA FINCA spa & recepciones está en un entorno natural de Morona Santiago. Guarda el lugar en tu mapa y escríbenos antes de venir para confirmar disponibilidad.',
+                      'En General Leonidas Plaza, Morona Santiago, te espera un espacio tranquilo para venir en pareja, con amigos o en familia. Tenemos piscinas, áreas para compartir y parqueadero para visitantes. Escríbenos antes de salir y te ayudamos a preparar el plan.',
                       style: TextStyle(
                         color: Color(0xFF69736B),
                         fontSize: 16,
@@ -1055,7 +1277,7 @@ class _HomePageState extends State<HomePage>
                       Row(
                         children: [
                           ClipOval(
-                            child: Image.network(
+                            child: Image.asset(
                               instagramAsset,
                               width: 56,
                               height: 56,
@@ -1343,6 +1565,34 @@ class _HomePageState extends State<HomePage>
               child: const Text('Entendido'))
         ],
       ),
+    );
+  }
+}
+
+class _HeroPill extends StatelessWidget {
+  const _HeroPill({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .13),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.white.withValues(alpha: .20)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, color: const Color(0xFFF1D6A2), size: 15),
+        const SizedBox(width: 6),
+        Text(text,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w600)),
+      ]),
     );
   }
 }
