@@ -11,8 +11,46 @@
   <meta name="apple-mobile-web-app-title" content="LA FINCA">
   <title>LA FINCA | Spa, glamping y recepciones</title>
   <link rel="icon" type="image/png" href="favicon.png"/>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; min-height: 100%; background: #173F35; }
+    #la-finca-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 50% 35%, #235445 0%, #173F35 48%, #0D2D26 100%);
+      transition: opacity .55s ease, visibility .55s ease;
+    }
+    #la-finca-loader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .la-finca-loader-content { display: grid; justify-items: center; gap: 16px; padding: 24px; text-align: center; font-family: Arial, sans-serif; }
+    .la-finca-loader-logo { width: 74px; height: 74px; border: 2px solid #E6C68A; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 8px rgba(230,198,138,.08); }
+    .la-finca-loader-name { color: #fff; font-size: 22px; font-weight: 800; letter-spacing: 5px; }
+    .la-finca-loader-subtitle { color: #E6C68A; font-size: 11px; letter-spacing: 2px; }
+    .la-finca-loader-spinner { width: 30px; height: 30px; border: 2px solid rgba(255,255,255,.22); border-top-color: #E6C68A; border-radius: 50%; animation: la-finca-spin 1s linear infinite; }
+    .la-finca-loader-status { color: #C8D6CD; font-size: 12px; }
+    @keyframes la-finca-spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
+  <div id="la-finca-loader" role="status" aria-live="polite">
+    <div class="la-finca-loader-content">
+      <img class="la-finca-loader-logo" src="assets/assets/instagram/profile.jpg" alt="LA FINCA">
+      <div class="la-finca-loader-name">LA FINCA</div>
+      <div class="la-finca-loader-subtitle">SPA &amp; RECEPCIONES</div>
+      <div class="la-finca-loader-spinner"></div>
+      <div class="la-finca-loader-status">Preparando tu experiencia…</div>
+    </div>
+  </div>
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    function hideLaFincaLoader() {
+      const loader = document.getElementById('la-finca-loader');
+      if (loader) loader.classList.add('is-hidden');
+    }
+    window.addEventListener('flutter-first-frame', hideLaFincaLoader);
+    window.setTimeout(hideLaFincaLoader, 12000);
+  </script>
 </body>
 </html>

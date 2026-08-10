@@ -45,6 +45,60 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+class _ScrollReveal extends StatefulWidget {
+  const _ScrollReveal({required this.controller, required this.child});
+
+  final ScrollController controller;
+  final Widget child;
+
+  @override
+  State<_ScrollReveal> createState() => _ScrollRevealState();
+}
+
+class _ScrollRevealState extends State<_ScrollReveal> {
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_checkVisibility);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkVisibility());
+  }
+
+  void _checkVisibility() {
+    if (_visible || !mounted) return;
+    final renderObject = context.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.hasSize) return;
+    final top = renderObject.localToGlobal(Offset.zero).dy;
+    final bottom = top + renderObject.size.height;
+    final viewportHeight = MediaQuery.sizeOf(context).height;
+    if (top < viewportHeight * .92 && bottom > 0) {
+      setState(() => _visible = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_checkVisibility);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: _visible ? 1 : 0,
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeOut,
+      child: AnimatedSlide(
+        offset: _visible ? Offset.zero : const Offset(0, .08),
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   final _scrollController = ScrollController();
@@ -58,6 +112,8 @@ class _HomePageState extends State<HomePage>
   static const forest = Color(0xFF173F35);
   static const pale = Color(0xFFE9E5D9);
   static const gold = Color(0xFFC8954B);
+  static const instagramAsset = 'assets/instagram/profile.jpg';
+  // ignore: unused_field
   static const instagramProfileImage =
       'https://scontent.cdninstagram.com/v/t51.2885-19/461707362_1617025179237818_5887856438543862324_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=100&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy41ODUuQzIifQ%3D%3D&_nc_ohc=gniTo1hTEUEQ7kNvwFqfJBJ&_nc_oc=AdrmhjRNdgSQeH8qtQrTkZbNFy5D-pDmDnBAAMxYrfhOLr1Av1-TyvkDFQksoWW_hGo&_nc_zt=24&_nc_ht=scontent.cdninstagram.com&_nc_ss=72a02&oh=00_AQFbARdwkgwl0Gn8AmRZdW2pFidw997-GpuHFJ3F3qUDOA&oe=6A7F178C';
 
@@ -179,9 +235,7 @@ class _HomePageState extends State<HomePage>
             BoxConstraints(minHeight: mobile ? (compact ? 650 : 680) : 700),
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: NetworkImage(
-              'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=1900&q=85',
-            ),
+            image: AssetImage('assets/instagram/aerial.jpg'),
             fit: BoxFit.cover,
           ),
         ),
@@ -301,7 +355,7 @@ class _HomePageState extends State<HomePage>
   Widget _profileLogo(double size) {
     return ClipOval(
       child: Image.network(
-        instagramProfileImage,
+        instagramAsset,
         width: size,
         height: size,
         fit: BoxFit.cover,
@@ -410,12 +464,16 @@ class _HomePageState extends State<HomePage>
                         color: Color(0xFF69736B), fontSize: 16, height: 1.6)),
               ),
               const SizedBox(height: 40),
-              child,
+              _reveal(child),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _reveal(Widget child) {
+    return _ScrollReveal(controller: _scrollController, child: child);
   }
 
   Widget _experienceCards(bool mobile) {
@@ -425,21 +483,28 @@ class _HomePageState extends State<HomePage>
         'Pausa profunda',
         'Masajes, hidromasaje y momentos para volver a ti.',
         Icons.spa_rounded,
-        'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=900&q=80'
+        'assets/instagram/aerial.jpg'
       ),
       (
         'GLAMPING',
         'Dormir bajo las estrellas',
         'Una escapada distinta, cómoda y conectada con la naturaleza.',
         Icons.nightlight_round,
-        'https://images.unsplash.com/photo-1504851149312-7a075b496cc7?auto=format&fit=crop&w=900&q=80'
+        'assets/instagram/landscape.jpg'
       ),
       (
         'GASTRONOMÍA',
         'Sabores para compartir',
         'Planes completos para que solo tengas que disfrutar.',
         Icons.restaurant_rounded,
-        'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=80'
+        'assets/instagram/people.jpg'
+      ),
+      (
+        'PLAN CAMPIN',
+        'Una escapada desde \$15',
+        'Uso de instalaciones, menú seleccionado y zona de campin.',
+        Icons.local_fire_department_rounded,
+        'assets/instagram/campin.jpg'
       ),
     ];
     return Wrap(
@@ -471,8 +536,8 @@ class _HomePageState extends State<HomePage>
         child: Container(
           height: 360,
           decoration: BoxDecoration(
-              image: DecorationImage(
-                  image: NetworkImage(image), fit: BoxFit.cover)),
+              image:
+                  DecorationImage(image: AssetImage(image), fit: BoxFit.cover)),
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -619,10 +684,8 @@ class _HomePageState extends State<HomePage>
                   Expanded(
                       child: ClipRRect(
                           borderRadius: BorderRadius.circular(24),
-                          child: Image.network(
-                              'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1100&q=80',
-                              height: 420,
-                              fit: BoxFit.cover))),
+                          child: Image.asset('assets/instagram/people.jpg',
+                              height: 420, fit: BoxFit.cover))),
                   const SizedBox(width: 74),
                   Expanded(child: _eventCopy(mobile)),
                 ]),
@@ -638,11 +701,8 @@ class _HomePageState extends State<HomePage>
         if (mobile) ...[
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
-            child: Image.network(
-                'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1100&q=80',
-                height: 260,
-                width: double.infinity,
-                fit: BoxFit.cover),
+            child: Image.asset('assets/instagram/people.jpg',
+                height: 260, width: double.infinity, fit: BoxFit.cover),
           ),
           const SizedBox(height: 34),
         ],
@@ -996,7 +1056,7 @@ class _HomePageState extends State<HomePage>
                         children: [
                           ClipOval(
                             child: Image.network(
-                              instagramProfileImage,
+                              instagramAsset,
                               width: 56,
                               height: 56,
                               fit: BoxFit.cover,
