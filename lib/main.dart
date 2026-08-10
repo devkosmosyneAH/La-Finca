@@ -50,6 +50,7 @@ class _HomePageState extends State<HomePage> {
   final _experienciasKey = GlobalKey();
   final _glampingKey = GlobalKey();
   final _eventosKey = GlobalKey();
+  final _ubicacionKey = GlobalKey();
   final _reservasKey = GlobalKey();
 
   static const forest = Color(0xFF173F35);
@@ -101,6 +102,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   SliverToBoxAdapter(child: _glampingSection(mobile)),
                   SliverToBoxAdapter(child: _eventsSection(mobile)),
+                  SliverToBoxAdapter(child: _locationSection(mobile)),
                   SliverToBoxAdapter(child: _testimonial()),
                   SliverToBoxAdapter(child: _reservationSection(mobile)),
                   SliverToBoxAdapter(child: _footer(mobile)),
@@ -259,6 +261,7 @@ class _HomePageState extends State<HomePage> {
               _navButton('Experiencias', () => _goTo(_experienciasKey)),
               _navButton('Glamping', () => _goTo(_glampingKey)),
               _navButton('Eventos', () => _goTo(_eventosKey)),
+              _navButton('Ubicación', () => _goTo(_ubicacionKey)),
               _navButton('Reservas', () => _goTo(_reservasKey)),
             ],
           ),
@@ -605,6 +608,163 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _locationSection(bool mobile) {
+    return Container(
+      key: _ubicacionKey,
+      color: const Color(0xFFF0EDE4),
+      padding: EdgeInsets.fromLTRB(24, mobile ? 68 : 82, 24, mobile ? 68 : 82),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1180),
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            runSpacing: 34,
+            children: [
+              SizedBox(
+                width: mobile ? double.infinity : 540,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _eyebrow('ENCUÉNTRANOS'),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Ven a desconectar\nen Limón Indanza.',
+                      style: TextStyle(
+                        color: forest,
+                        fontSize: mobile ? 36 : 44,
+                        height: 1.05,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'LA FINCA spa & recepciones está en un entorno natural de Morona Santiago. Guarda el lugar en tu mapa y escríbenos antes de venir para confirmar disponibilidad.',
+                      style: TextStyle(
+                        color: Color(0xFF69736B),
+                        fontSize: 16,
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        _primaryButton(
+                            'Cómo llegar', Icons.directions_rounded, _openMaps),
+                        _textButton('Llamar al equipo', _call),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: mobile ? double.infinity : 480,
+                child: Container(
+                  padding: EdgeInsets.all(mobile ? 24 : 30),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: const Color(0xFFDCD7C9)),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x120D2D26),
+                        blurRadius: 24,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F0EA),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(Icons.location_on_rounded,
+                                color: forest, size: 24),
+                          ),
+                          const SizedBox(width: 14),
+                          const Expanded(
+                            child: Text(
+                              'LA FINCA spa & recepciones',
+                              style: TextStyle(
+                                  color: forest,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      _locationDetail(Icons.place_outlined, 'Dirección',
+                          '2G4C+5F, Gral. Leonidas Plaza Gutiérrez\nLimón Indanza, Morona Santiago · Ecuador'),
+                      _locationDetail(Icons.schedule_rounded, 'Horario',
+                          'Jueves y viernes: 14:00–22:00\nSábados y domingos: 12:00–22:00'),
+                      _locationDetail(Icons.star_rounded, 'Google Maps',
+                          '4,7 / 5 · categoría Spa'),
+                      _locationDetail(Icons.pin_drop_outlined, 'Coordenadas',
+                          '-2.9945989, -78.4787797'),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _openMaps,
+                          icon: const Icon(Icons.open_in_new_rounded, size: 17),
+                          label: const Text('Abrir ubicación en Google Maps'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: forest,
+                            side: const BorderSide(color: Color(0xFFB8C8BD)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _locationDetail(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: gold, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(
+                        color: forest,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 3),
+                Text(value,
+                    style: const TextStyle(
+                        color: Color(0xFF69736B), fontSize: 13, height: 1.45)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _testimonial() {
     return Container(
       color: pale,
@@ -745,6 +905,15 @@ class _HomePageState extends State<HomePage> {
         child: Text(text,
             style:
                 const TextStyle(color: forest, fontWeight: FontWeight.bold)));
+  }
+
+  Future<void> _openMaps() async {
+    final uri = Uri.parse('https://maps.app.goo.gl/DoZu9bp9NGxzDAvg9');
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
+        mounted) {
+      _showMessage('Ubicación',
+          'Abre Google Maps y busca: LA FINCA spa & recepciones, Limón Indanza.');
+    }
   }
 
   Future<void> _whatsapp() async {
