@@ -1,0 +1,20 @@
+{
+  "name": "LA FINCA",
+  "short_name": "LA FINCA",
+  "description": "Spa, glamping y recepciones en Limón Indanza.",
+  "lang": "es-EC",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#173F35",
+  "theme_color": "#173F35",
+  "icons": [
+    {
+      "src": "assets/assets/instagram/profile.jpg",
+      "sizes": "585x585",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
