@@ -35,7 +35,11 @@ Database en `site/content`.
    `flutterfire configure` no es necesario para este repositorio; el archivo
    usa `FIREBASE_API_KEY` como variable de compilación.
 8. En GitHub, ir a Settings → Secrets and variables → Actions → New repository
-   secret y crear `FIREBASE_API_KEY` con la clave web del proyecto.
+   secret y crear `FIREBASE_API_KEY` con la clave web del proyecto. Si GitHub
+   muestra "Failed to add secret", puede crearse como variable en `Settings >
+   Secrets and variables > Actions > Variables`; el workflow acepta ambas
+   opciones porque la clave web de Firebase es un identificador que termina en
+   el JavaScript público.
 
 El panel queda disponible en `/admin`. La regla `web/_redirects` permite que
 Cloudflare Pages entregue la aplicación Flutter también cuando se abre esa
