@@ -151,7 +151,7 @@ class _AdminPageState extends State<AdminPage> {
           _checkingSession = false;
           _contentLoaded = false;
           _dataError =
-              'No pudimos cargar la información guardada. Revisa la conexión e inténtalo de nuevo.';
+              'No pudimos cargar la información guardada. Revisa tu conexión e inténtalo de nuevo.';
         });
       }
     }
@@ -174,7 +174,7 @@ class _AdminPageState extends State<AdminPage> {
         setState(() {
           _contentLoaded = false;
           _dataError =
-              'Firebase no respondió. Confirma tu conexión y las reglas de Realtime Database.';
+              'El servicio de contenido no respondió. Confirma tu conexión e inténtalo de nuevo.';
         });
       }
     } finally {
@@ -307,11 +307,11 @@ class _AdminPageState extends State<AdminPage> {
         case 'network-request-failed':
           return 'No hay conexión. Revisa internet e inténtalo de nuevo.';
         case 'operation-not-allowed':
-          return 'El acceso por correo y contraseña está desactivado en Firebase.';
+          return 'El acceso por correo y contraseña está temporalmente desactivado. Contacta al administrador.';
         case 'unauthorized-domain':
-          return 'Este dominio no está autorizado en Firebase Authentication.';
+          return 'Este sitio no está autorizado para iniciar sesión. Contacta al administrador.';
         case 'api-key-not-valid.-please-pass-a-valid-api-key.':
-          return 'La clave de Firebase no es válida. Revisa el secreto de Actions.';
+          return 'Hay un problema con la configuración del acceso. Contacta al administrador.';
       }
     }
     return 'No se pudo iniciar sesión. Inténtalo nuevamente.';
@@ -321,7 +321,7 @@ class _AdminPageState extends State<AdminPage> {
     if (exception is FirebaseException) {
       switch (exception.code) {
         case 'permission-denied':
-          return 'Firebase rechazó el cambio. Revisa las reglas y que tu correo esté verificado.';
+          return 'No tienes permiso para guardar cambios. Confirma que tu correo esté verificado.';
         case 'network-request-failed':
           return 'No hay conexión. Tus cambios no se guardaron.';
         case 'unauthenticated':
@@ -430,7 +430,7 @@ class _AdminPageState extends State<AdminPage> {
         icon: Icons.link_off_rounded,
         title: 'Panel pendiente de conectar',
         message:
-            'Configura Firebase para habilitar el acceso administrativo. La página pública continúa funcionando con su contenido local.',
+            'Completa la configuración del panel para habilitar el acceso administrativo. La página pública continúa funcionando con su contenido local.',
         color: const Color(0xFF9E6B25),
       );
 
@@ -938,7 +938,8 @@ class _AdminPageState extends State<AdminPage> {
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.w800)),
                   SizedBox(height: 3),
-                  Text('Se guardarán en Firebase Realtime Database.',
+                  Text(
+                      'Se guardarán de forma segura y la página pública se actualizará.',
                       style: TextStyle(color: Color(0xFFBFD4C8), fontSize: 12)),
                 ],
               ),
