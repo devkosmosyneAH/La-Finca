@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'content_service.dart';
@@ -14,8 +14,12 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   static const forest = Color(0xFF173F35);
+  static const forestDark = Color(0xFF0D2D26);
   static const gold = Color(0xFFC8954B);
   static const cream = Color(0xFFF7F4EE);
+  static const ink = Color(0xFF20352D);
+  static const muted = Color(0xFF68766E);
+  static const error = Color(0xFF9E3D2F);
 
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -31,11 +35,15 @@ class _AdminPageState extends State<AdminPage> {
   final _heroTitleController = TextEditingController();
   final _heroSubtitleController = TextEditingController();
   final _reservationTitleController = TextEditingController();
+
   bool _loading = false;
   bool _loggedIn = false;
   bool _checkingSession = true;
   bool _obscurePassword = true;
+  bool _contentLoaded = true;
   String? _authError;
+  String? _dataError;
+  DateTime? _lastSavedAt;
 
   @override
   void initState() {
@@ -73,8 +81,12 @@ class _AdminPageState extends State<AdminPage> {
     if (!ContentService.isConfigured || !_formKey.currentState!.validate()) {
       return;
     }
-    setState(() => _loading = true);
-    setState(() => _authError = null);
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _loading = true;
+      _authError = null;
+    });
+
     try {
       final credential = await ContentService.signIn(
         _emailController.text,
@@ -82,11 +94,16 @@ class _AdminPageState extends State<AdminPage> {
       );
       final user = credential.user;
       if (user == null || !user.emailVerified) {
-        if (user != null) await user.sendEmailVerification();
+        if (user != null) {
+          await user.sendEmailVerification();
+        }
         await ContentService.signOut();
-        _message(
-          'Debes verificar el correo. Te enviamos un nuevo enlace de verificación.',
-        );
+        if (mounted) {
+          setState(() {
+            _authError =
+                'Tu correo aún no está verificado. Te enviamos un nuevo enlace.';
+          });
+        }
         return;
       }
       await _enterEditor();
@@ -109,7 +126,6 @@ class _AdminPageState extends State<AdminPage> {
       }
       await _enterEditor();
     } catch (_) {
-      // A stale session must never bypass the login screen.
       await ContentService.signOut();
     } finally {
       if (mounted) setState(() => _checkingSession = false);
@@ -117,16 +133,52 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   Future<void> _enterEditor() async {
-    // A temporary database read failure must not discard a valid login.
-    final content = await ContentService.load().catchError(
-      (_) => SiteContent.defaults,
-    );
-    _fill(content);
-    if (mounted) {
-      setState(() {
-        _loggedIn = true;
-        _checkingSession = false;
-      });
+    try {
+      final content = await ContentService.load();
+      _fill(content);
+      if (mounted) {
+        setState(() {
+          _loggedIn = true;
+          _checkingSession = false;
+          _contentLoaded = true;
+          _dataError = null;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _loggedIn = true;
+          _checkingSession = false;
+          _contentLoaded = false;
+          _dataError =
+              'No pudimos cargar la información guardada. Revisa la conexión e inténtalo de nuevo.';
+        });
+      }
+    }
+  }
+
+  Future<void> _retryLoad() async {
+    setState(() => _loading = true);
+    try {
+      final content = await ContentService.load();
+      _fill(content);
+      if (mounted) {
+        setState(() {
+          _contentLoaded = true;
+          _dataError = null;
+        });
+      }
+      _message('Contenido cargado correctamente.');
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _contentLoaded = false;
+          _dataError =
+              'Firebase no respondió. Confirma tu conexión y las reglas de Realtime Database.';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -137,21 +189,55 @@ class _AdminPageState extends State<AdminPage> {
       _loggedIn = false;
       _passwordController.clear();
       _authError = null;
+      _dataError = null;
     });
   }
 
   Future<void> _save() async {
+    if (!_contentLoaded) {
+      _message('Carga el contenido antes de guardar cambios.', error: true);
+      return;
+    }
+    final content = _contentFromForm();
+    final validationError = _validateContent(content);
+    if (validationError != null) {
+      _message(validationError, error: true);
+      return;
+    }
+
     setState(() => _loading = true);
     try {
-      await ContentService.save(_contentFromForm());
-      _message(
-          'Cambios guardados. La página pública ya puede mostrar la nueva configuración.');
-    } catch (_) {
-      _message(
-          'No se pudieron guardar los cambios. Revisa la configuración de Firebase.');
+      await ContentService.save(content);
+      if (!mounted) return;
+      setState(() => _lastSavedAt = DateTime.now());
+      _message('Cambios guardados. La página pública ya está actualizada.');
+    } catch (saveError) {
+      _message(_databaseMessage(saveError), error: true);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  String? _validateContent(SiteContent content) {
+    if (content.pdfUrl1.isNotEmpty && content.pdfCategory1.trim().isEmpty) {
+      return 'Agrega una categoría para el PDF 1.';
+    }
+    if (content.pdfUrl2.isNotEmpty && content.pdfCategory2.trim().isEmpty) {
+      return 'Agrega una categoría para el PDF 2.';
+    }
+    for (final entry in <String, String>{
+      'PDF 1': content.pdfUrl1,
+      'PDF 2': content.pdfUrl2,
+      'Instagram': content.instagramUrl,
+      'Google Maps': content.mapsUrl,
+    }.entries) {
+      if (entry.value.trim().isEmpty) continue;
+      final uri = Uri.tryParse(entry.value.trim());
+      if (uri == null || !{'http', 'https'}.contains(uri.scheme)) {
+        return 'El enlace de ${entry.key} debe comenzar con https://.';
+      }
+    }
+    return null;
   }
 
   void _fill(SiteContent content) {
@@ -169,27 +255,45 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   SiteContent _contentFromForm() => SiteContent(
-        phone: _phoneController.text,
-        whatsappMessage: _messageController.text,
-        pdfUrl1: _pdfUrl1Controller.text,
-        pdfCategory1: _pdfCategory1Controller.text,
-        pdfUrl2: _pdfUrl2Controller.text,
-        pdfCategory2: _pdfCategory2Controller.text,
-        instagramUrl: _instagramController.text,
-        mapsUrl: _mapsController.text,
-        heroTitle: _heroTitleController.text,
-        heroSubtitle: _heroSubtitleController.text,
-        reservationTitle: _reservationTitleController.text,
+        phone: _phoneController.text.trim(),
+        whatsappMessage: _messageController.text.trim(),
+        pdfUrl1: _pdfUrl1Controller.text.trim(),
+        pdfCategory1: _pdfCategory1Controller.text.trim(),
+        pdfUrl2: _pdfUrl2Controller.text.trim(),
+        pdfCategory2: _pdfCategory2Controller.text.trim(),
+        instagramUrl: _instagramController.text.trim(),
+        mapsUrl: _mapsController.text.trim(),
+        heroTitle: _heroTitleController.text.trim(),
+        heroSubtitle: _heroSubtitleController.text.trim(),
+        reservationTitle: _reservationTitleController.text.trim(),
       );
 
-  void _message(String text) {
+  void _message(String text, {bool error = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: error ? const Color(0xFF7B3026) : forest,
+          content: Row(
+            children: [
+              Icon(
+                  error
+                      ? Icons.error_outline_rounded
+                      : Icons.check_circle_outline,
+                  color: Colors.white),
+              const SizedBox(width: 10),
+              Expanded(child: Text(text)),
+            ],
+          ),
+        ),
+      );
   }
 
-  String _authMessage(Object error) {
-    if (error is FirebaseAuthException) {
-      switch (error.code) {
+  String _authMessage(Object exception) {
+    if (exception is FirebaseAuthException) {
+      switch (exception.code) {
         case 'invalid-email':
           return 'Escribe un correo electrónico válido.';
         case 'invalid-credential':
@@ -202,9 +306,29 @@ class _AdminPageState extends State<AdminPage> {
           return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
         case 'network-request-failed':
           return 'No hay conexión. Revisa internet e inténtalo de nuevo.';
+        case 'operation-not-allowed':
+          return 'El acceso por correo y contraseña está desactivado en Firebase.';
+        case 'unauthorized-domain':
+          return 'Este dominio no está autorizado en Firebase Authentication.';
+        case 'api-key-not-valid.-please-pass-a-valid-api-key.':
+          return 'La clave de Firebase no es válida. Revisa el secreto de Actions.';
       }
     }
     return 'No se pudo iniciar sesión. Inténtalo nuevamente.';
+  }
+
+  String _databaseMessage(Object exception) {
+    if (exception is FirebaseException) {
+      switch (exception.code) {
+        case 'permission-denied':
+          return 'Firebase rechazó el cambio. Revisa las reglas y que tu correo esté verificado.';
+        case 'network-request-failed':
+          return 'No hay conexión. Tus cambios no se guardaron.';
+        case 'unauthenticated':
+          return 'La sesión expiró. Cierra sesión e ingresa nuevamente.';
+      }
+    }
+    return 'No se pudieron guardar los cambios. Inténtalo nuevamente.';
   }
 
   @override
@@ -218,27 +342,50 @@ class _AdminPageState extends State<AdminPage> {
   Widget _adminShell(Widget child) => Scaffold(
         backgroundColor: cream,
         appBar: AppBar(
+          toolbarHeight: 72,
           backgroundColor: forest,
           foregroundColor: Colors.white,
-          title: const Text('Administración · LA FINCA'),
+          titleSpacing: 20,
+          title: Row(
+            children: [
+              _brandMark(size: 38),
+              const SizedBox(width: 12),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('LA FINCA',
+                      style: TextStyle(fontSize: 15, letterSpacing: 1.4)),
+                  Text('Panel de administración',
+                      style: TextStyle(fontSize: 11, color: Color(0xFFBFD4C8))),
+                ],
+              ),
+            ],
+          ),
           actions: [
+            IconButton(
+              onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
+              tooltip: 'Ver página pública',
+              icon: const Icon(Icons.open_in_new_rounded),
+            ),
             if (_loggedIn)
               IconButton(
                 onPressed: _loading ? null : _logout,
                 tooltip: 'Cerrar sesión',
                 icon: const Icon(Icons.logout_rounded),
               ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
-              child: const Text('Ver página pública',
-                  style: TextStyle(color: Colors.white)),
-            ),
+            const SizedBox(width: 8),
           ],
         ),
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Padding(padding: const EdgeInsets.all(24), child: child),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 980),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                child: child,
+              ),
+            ),
           ),
         ),
       );
@@ -249,11 +396,11 @@ class _AdminPageState extends State<AdminPage> {
           children: [
             Positioned.fill(
               child: DecoratedBox(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [forest, const Color(0xFF0D2D26)],
+                    colors: [forest, forestDark],
                   ),
                 ),
               ),
@@ -279,18 +426,63 @@ class _AdminPageState extends State<AdminPage> {
         ),
       );
 
-  Widget _setupNotice() => Card(
+  Widget _setupNotice() => _noticeCard(
+        icon: Icons.link_off_rounded,
+        title: 'Panel pendiente de conectar',
+        message:
+            'Configura Firebase para habilitar el acceso administrativo. La página pública continúa funcionando con su contenido local.',
+        color: const Color(0xFF9E6B25),
+      );
+
+  Widget _sessionLoading() => _noticeCard(
+        icon: Icons.sync_rounded,
+        title: 'Comprobando sesión',
+        message: 'Estamos verificando tu acceso seguro…',
+        color: forest,
+        action: const CircularProgressIndicator(strokeWidth: 2),
+      );
+
+  Widget _noticeCard({
+    required IconData icon,
+    required String title,
+    required String message,
+    required Color color,
+    Widget? action,
+  }) =>
+      Card(
+        elevation: 0,
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: Color(0xFFE6E7E0)),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
+          padding: const EdgeInsets.all(26),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text('Panel pendiente de conectar',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              SizedBox(height: 12),
-              Text(
-                'Configura Firebase y reemplaza los valores de firebase_options.dart. La página pública sigue funcionando con su contenido local mientras tanto.',
+            children: [
+              CircleAvatar(
+                backgroundColor: color.withValues(alpha: .12),
+                foregroundColor: color,
+                child: Icon(icon),
               ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            color: ink,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 8),
+                    Text(message,
+                        style: const TextStyle(color: muted, height: 1.45)),
+                  ],
+                ),
+              ),
+              if (action != null) ...[const SizedBox(width: 16), action],
             ],
           ),
         ),
@@ -303,10 +495,9 @@ class _AdminPageState extends State<AdminPage> {
           borderRadius: BorderRadius.circular(28),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x55000000),
-              blurRadius: 30,
-              offset: Offset(0, 16),
-            ),
+                color: Color(0x55000000),
+                blurRadius: 30,
+                offset: Offset(0, 16)),
           ],
         ),
         child: Form(
@@ -314,46 +505,27 @@ class _AdminPageState extends State<AdminPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/instagram/profile.jpg',
-                    width: 76,
-                    height: 76,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 76,
-                      height: 76,
-                      color: gold,
-                      child: const Icon(Icons.spa_rounded,
-                          color: forest, size: 38),
-                    ),
-                  ),
-                ),
-              ),
+              Center(child: _brandMark(size: 76)),
               const SizedBox(height: 18),
-              const Text(
-                'PANEL PRIVADO',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    color: gold,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 2.2),
-              ),
+              const Text('PANEL PRIVADO',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: gold,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 2.2)),
+              const SizedBox(height: 8),
+              const Text('Administra LA FINCA',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: forest,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               const Text(
-                'Administra LA FINCA',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    color: forest, fontSize: 28, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Actualiza tus enlaces y contenidos desde un solo lugar.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF69736B), height: 1.45),
-              ),
+                  'Actualiza tus enlaces y contenidos desde un solo lugar.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: muted, height: 1.45)),
               const SizedBox(height: 26),
               _loginField(
                 controller: _emailController,
@@ -398,26 +570,7 @@ class _AdminPageState extends State<AdminPage> {
               ),
               if (_authError != null) ...[
                 const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFE9E4),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.info_outline_rounded,
-                          color: Color(0xFF9E3D2F), size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(_authError!,
-                            style: const TextStyle(
-                                color: Color(0xFF86352B), fontSize: 12)),
-                      ),
-                    ],
-                  ),
-                ),
+                _inlineError(_authError!),
               ],
               const SizedBox(height: 22),
               SizedBox(
@@ -443,13 +596,46 @@ class _AdminPageState extends State<AdminPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Acceso exclusivo para el propietario del sitio.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF8A9289), fontSize: 11),
-              ),
+              const Text('Acceso exclusivo para el propietario del sitio.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Color(0xFF8A9289), fontSize: 11)),
             ],
           ),
+        ),
+      );
+
+  Widget _brandMark({required double size}) => ClipOval(
+        child: Image.asset(
+          'assets/instagram/profile.jpg',
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            width: size,
+            height: size,
+            color: gold,
+            child: Icon(Icons.spa_rounded, color: forest, size: size * .5),
+          ),
+        ),
+      );
+
+  Widget _inlineError(String message) => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFE9E4),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFF4C7BE)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.error_outline_rounded, color: error, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+                child: Text(message,
+                    style: const TextStyle(
+                        color: Color(0xFF86352B), fontSize: 12))),
+          ],
         ),
       );
 
@@ -464,49 +650,337 @@ class _AdminPageState extends State<AdminPage> {
     bool obscureText = false,
     Widget? suffixIcon,
     ValueChanged<String>? onSubmitted,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      autofillHints: autofillHints,
-      onFieldSubmitted: onSubmitted,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, size: 20),
-        suffixIcon: suffixIcon,
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: Color(0xFFE2E4DD))),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: forest, width: 1.4)),
-        errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: Color(0xFFC75D4C))),
-        focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: Color(0xFFC75D4C), width: 1.4)),
-      ),
-    );
-  }
+  }) =>
+      TextFormField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        textInputAction: textInputAction,
+        autofillHints: autofillHints,
+        onFieldSubmitted: onSubmitted,
+        validator: validator,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, size: 20),
+          suffixIcon: suffixIcon,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: BorderSide.none),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: const BorderSide(color: Color(0xFFE2E4DD))),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: const BorderSide(color: forest, width: 1.4)),
+          errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: const BorderSide(color: Color(0xFFC75D4C))),
+          focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide:
+                  const BorderSide(color: Color(0xFFC75D4C), width: 1.4)),
+        ),
+      );
 
-  Widget _sessionLoading() => const Padding(
-        padding: EdgeInsets.all(32),
-        child: Column(
+  Widget _editor() => ListView(
+        children: [
+          _editorHeader(),
+          if (_dataError != null) ...[
+            const SizedBox(height: 18),
+            _dataWarning(),
+          ],
+          const SizedBox(height: 22),
+          _sectionCard(
+            icon: Icons.contact_phone_outlined,
+            title: 'Contacto y reservas',
+            description:
+                'Define cómo pueden comunicarse contigo tus visitantes.',
+            children: [
+              _field(_phoneController, 'Teléfono de reservas'),
+              _field(_messageController, 'Mensaje de WhatsApp'),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _sectionCard(
+            icon: Icons.picture_as_pdf_outlined,
+            title: 'Documentos PDF',
+            description:
+                'Pega enlaces públicos de Drive y asigna una categoría a cada documento.',
+            children: [_pdfGrid()],
+          ),
+          const SizedBox(height: 16),
+          _sectionCard(
+            icon: Icons.public_rounded,
+            title: 'Enlaces públicos',
+            description: 'Estos accesos aparecerán en la página pública.',
+            children: [
+              _field(_instagramController, 'Enlace de Instagram'),
+              _field(_mapsController, 'Enlace de Google Maps'),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _sectionCard(
+            icon: Icons.edit_note_rounded,
+            title: 'Textos principales',
+            description:
+                'Personaliza los mensajes que verá el visitante al entrar al sitio.',
+            children: [
+              _field(_heroTitleController, 'Título principal'),
+              _field(_heroSubtitleController, 'Subtítulo principal'),
+              _field(_reservationTitleController, 'Título de reservas'),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _saveBar(),
+          const SizedBox(height: 16),
+          Center(child: _developerCredit(dark: false)),
+        ],
+      );
+
+  Widget _editorHeader() => Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Contenido del sitio',
+                    style: TextStyle(
+                        color: ink, fontSize: 30, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 6),
+                const Text(
+                    'Administra los enlaces y textos de LA FINCA desde un solo panel.',
+                    style: TextStyle(color: muted, height: 1.4)),
+              ],
+            ),
+          ),
+          if (_lastSavedAt != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 12, top: 6),
+              child: _savedBadge(),
+            ),
+        ],
+      );
+
+  Widget _savedBadge() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE5F2E7),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Comprobando sesión…'),
+            Icon(Icons.check_circle_rounded,
+                color: Color(0xFF2F7D47), size: 16),
+            SizedBox(width: 6),
+            Text('Guardado',
+                style: TextStyle(
+                    color: Color(0xFF2F7D47),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700)),
           ],
+        ),
+      );
+
+  Widget _dataWarning() => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF5DD),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE8D39C)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Color(0xFF946A1B)),
+            const SizedBox(width: 12),
+            Expanded(
+                child: Text(_dataError!,
+                    style: const TextStyle(color: Color(0xFF72521A)))),
+            const SizedBox(width: 10),
+            OutlinedButton(
+              onPressed: _loading ? null : _retryLoad,
+              child: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      );
+
+  Widget _sectionCard({
+    required IconData icon,
+    required String title,
+    required String description,
+    required List<Widget> children,
+  }) =>
+      Card(
+        elevation: 0,
+        color: Colors.white,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: const BorderSide(color: Color(0xFFE4E7DF)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 22, 22, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFEAF1EC),
+                        borderRadius: BorderRadius.circular(13)),
+                    child: Icon(icon, color: forest, size: 21),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title,
+                            style: const TextStyle(
+                                color: ink,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 3),
+                        Text(description,
+                            style: const TextStyle(
+                                color: muted, fontSize: 12, height: 1.35)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              ...children,
+            ],
+          ),
+        ),
+      );
+
+  Widget _pdfGrid() => LayoutBuilder(
+        builder: (context, constraints) {
+          final cards = [
+            _pdfSection('1', _pdfCategory1Controller, _pdfUrl1Controller),
+            _pdfSection('2', _pdfCategory2Controller, _pdfUrl2Controller),
+          ];
+          if (constraints.maxWidth < 650) {
+            return Column(
+                children: [cards[0], const SizedBox(height: 12), cards[1]]);
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: cards[0]),
+              const SizedBox(width: 14),
+              Expanded(child: cards[1]),
+            ],
+          );
+        },
+      );
+
+  Widget _pdfSection(String number, TextEditingController categoryController,
+          TextEditingController urlController) =>
+      Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAFBF8),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E9E1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                    radius: 14,
+                    backgroundColor: gold,
+                    foregroundColor: forest,
+                    child: Text(number,
+                        style: const TextStyle(fontWeight: FontWeight.w800))),
+                const SizedBox(width: 9),
+                Text('Documento PDF $number',
+                    style: const TextStyle(
+                        color: ink, fontWeight: FontWeight.w800)),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _field(categoryController, 'Categoría'),
+            _field(urlController, 'Enlace público de Drive'),
+          ],
+        ),
+      );
+
+  Widget _saveBar() => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: forest,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [
+            BoxShadow(
+                color: Color(0x22000000), blurRadius: 14, offset: Offset(0, 6))
+          ],
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.cloud_done_outlined, color: Color(0xFFD9E8DE)),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Publicar cambios',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w800)),
+                  SizedBox(height: 3),
+                  Text('Se guardarán en Firebase Realtime Database.',
+                      style: TextStyle(color: Color(0xFFBFD4C8), fontSize: 12)),
+                ],
+              ),
+            ),
+            FilledButton(
+              onPressed: _loading || !_contentLoaded ? null : _save,
+              style: FilledButton.styleFrom(
+                  backgroundColor: gold,
+                  foregroundColor: forest,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14)),
+              child: Text(_loading ? 'Guardando…' : 'Guardar cambios'),
+            ),
+          ],
+        ),
+      );
+
+  Widget _field(TextEditingController controller, String label) => Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: TextField(
+          controller: controller,
+          maxLines: label.contains('Mensaje') ||
+                  label.contains('Título') ||
+                  label.contains('Subtítulo')
+              ? 3
+              : 1,
+          decoration: InputDecoration(
+            labelText: label,
+            filled: true,
+            fillColor: const Color(0xFFFCFDFC),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(13),
+                borderSide: const BorderSide(color: Color(0xFFDDE3DC))),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(13),
+                borderSide: const BorderSide(color: Color(0xFFDDE3DC))),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(13),
+                borderSide: const BorderSide(color: forest, width: 1.4)),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+          ),
         ),
       );
 
@@ -522,12 +996,11 @@ class _AdminPageState extends State<AdminPage> {
                   style: TextStyle(
                       color: dark ? const Color(0xFFC8D6CD) : forest)),
               const TextSpan(
-                text: 'Devkosmosyne',
-                style: TextStyle(
-                    color: Color(0xFFE6C68A),
-                    letterSpacing: 1.2,
-                    fontWeight: FontWeight.w800),
-              ),
+                  text: 'Devkosmosyne',
+                  style: TextStyle(
+                      color: Color(0xFFE6C68A),
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w800)),
             ],
           ),
         ),
@@ -543,69 +1016,4 @@ class _AdminPageState extends State<AdminPage> {
         Uri.parse('https://devkosmosyneah.github.io/devkosmosyne-website/');
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
-
-  Widget _editor() => ListView(
-        children: [
-          const Text('Contenido editable',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          const Text(
-              'El PDF debe tener permisos de Drive: “cualquier persona con el enlace puede ver”.'),
-          const SizedBox(height: 20),
-          _field(_phoneController, 'Teléfono de reservas'),
-          _field(_messageController, 'Mensaje de WhatsApp'),
-          _pdfSection(
-            number: '1',
-            categoryController: _pdfCategory1Controller,
-            urlController: _pdfUrl1Controller,
-          ),
-          _pdfSection(
-            number: '2',
-            categoryController: _pdfCategory2Controller,
-            urlController: _pdfUrl2Controller,
-          ),
-          _field(_instagramController, 'Enlace de Instagram'),
-          _field(_mapsController, 'Enlace de Google Maps'),
-          _field(_heroTitleController, 'Título principal'),
-          _field(_heroSubtitleController, 'Subtítulo principal'),
-          _field(_reservationTitleController, 'Título de reservas'),
-          const SizedBox(height: 12),
-          FilledButton(
-              onPressed: _loading ? null : _save,
-              child: Text(_loading ? 'Guardando…' : 'Guardar cambios')),
-      ],
-    );
-
-  Widget _pdfSection({
-    required String number,
-    required TextEditingController categoryController,
-    required TextEditingController urlController,
-  }) => Card(
-        margin: const EdgeInsets.only(bottom: 14),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('PDF $number',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              _field(categoryController, 'Categoría del PDF'),
-              _field(urlController, 'Enlace compartido del PDF de Drive'),
-            ],
-          ),
-        ),
-      );
-
-  Widget _field(TextEditingController controller, String label) => Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: TextField(
-          controller: controller,
-          maxLines:
-              label.contains('Título') || label.contains('Mensaje') ? 3 : 1,
-          decoration: InputDecoration(
-              labelText: label, border: const OutlineInputBorder()),
-        ),
-      );
 }
