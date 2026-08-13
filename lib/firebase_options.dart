@@ -1,6 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 
-/// Firebase Web configuration for project `la-finca-1394c`.
+/// Firebase Web configuration for project `lafinca-7dc2c`.
 /// These values are intended for the browser and are not service-account
 /// credentials. Realtime Database rules and Firebase Authentication protect
 /// the editable content.
@@ -15,11 +15,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: apiKey,
-    appId: '1:1089877198747:web:17fca0db100be1ab9f033e',
-    messagingSenderId: '1089877198747',
-    projectId: 'la-finca-1394c',
-    authDomain: 'la-finca-1394c.firebaseapp.com',
-    databaseURL: 'https://la-finca-1394c-default-rtdb.firebaseio.com',
+    appId: '1:281822232208:web:838676afac4bbd79a12215',
+    messagingSenderId: '281822232208',
+    projectId: 'lafinca-7dc2c',
+    authDomain: 'lafinca-7dc2c.firebaseapp.com',
+    databaseURL: 'https://lafinca-7dc2c-default-rtdb.firebaseio.com',
   );
 
   static FirebaseOptions get currentPlatform => web;
