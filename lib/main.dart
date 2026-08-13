@@ -398,6 +398,7 @@ class _HomePageState extends State<HomePage>
           )
         else
           _mobileMenu(),
+        if (!mobile) _utilityMenu(),
       ],
     );
   }
@@ -428,6 +429,12 @@ class _HomePageState extends State<HomePage>
           case 'reservas':
             _goTo(_reservasKey);
             break;
+          case 'info':
+            _showSiteInfo();
+            break;
+          case 'admin':
+            _openAdmin();
+            break;
         }
       },
       itemBuilder: (context) => const [
@@ -452,7 +459,62 @@ class _HomePageState extends State<HomePage>
             child: Text('Reservar',
                 style: TextStyle(
                     color: Color(0xFFE9C47A), fontWeight: FontWeight.bold))),
+        PopupMenuDivider(),
+        PopupMenuItem(
+            value: 'info',
+            child: Text('Información del sitio',
+                style: TextStyle(color: Colors.white))),
+        PopupMenuItem(
+            value: 'admin',
+            child: Text('Acceso administrativo',
+                style: TextStyle(color: Color(0xFFE9C47A)))),
       ],
+    );
+  }
+
+  Widget _utilityMenu() {
+    return PopupMenuButton<String>(
+      tooltip: 'Más opciones',
+      icon: const Icon(Icons.more_horiz_rounded,
+          color: Color(0xFFD7E0D9), size: 21),
+      color: const Color(0xFF173F35),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      onSelected: (value) {
+        if (value == 'info') _showSiteInfo();
+        if (value == 'admin') _openAdmin();
+      },
+      itemBuilder: (context) => const [
+        PopupMenuItem(
+            value: 'info',
+            child: Text('Información del sitio',
+                style: TextStyle(color: Colors.white))),
+        PopupMenuDivider(),
+        PopupMenuItem(
+            value: 'admin',
+            child: Text('Acceso administrativo',
+                style: TextStyle(color: Color(0xFFE9C47A)))),
+      ],
+    );
+  }
+
+  void _openAdmin() {
+    Navigator.of(context).pushNamed('/admin');
+  }
+
+  void _showSiteInfo() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Información de LA FINCA'),
+        content: const Text(
+          '© 2026 LA FINCA. La identidad visual, textos, fotografías y materiales del sitio pertenecen a sus respectivos propietarios y no deben reutilizarse sin autorización.\n\nDesarrollado por Devkosmosyne.',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar')),
+        ],
+      ),
     );
   }
 
