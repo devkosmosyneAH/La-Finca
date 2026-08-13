@@ -1,5 +1,7 @@
 # LA FINCA — propuesta comercial en Flutter
 
+> 🚧 **Página en movimiento:** este sitio se encuentra en proceso de actualización y configuración. Próximamente estará disponible la versión final para LA FINCA.
+
 Landing page responsive para presentar **spa, glamping, gastronomía y recepciones**.
 
 ## Abrir en Visual Studio Code
