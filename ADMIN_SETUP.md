@@ -41,7 +41,7 @@ Flutter. El acceso
 esta protegido por Firebase Authentication y las escrituras por las reglas de
 Realtime Database.
 
-## Uso del PDF
+## Uso de los PDF
 
 El propietario comparte el PDF en Google Drive como:
 
@@ -49,7 +49,9 @@ El propietario comparte el PDF en Google Drive como:
 Cualquier persona con el enlace -> Lector
 ```
 
-Luego pega ese enlace en `/admin`. El PDF no se guarda en Firebase Storage.
+Luego pega los enlaces y las categorías de ambos documentos en `/#/admin`.
+La página pública mostrará un botón por cada PDF configurado. Los PDF no se
+guardan en Firebase Storage; solo se guardan sus enlaces en Realtime Database.
 
 ## Costos y alcance
 
@@ -58,9 +60,9 @@ Luego pega ese enlace en `/admin`. El PDF no se guarda en Firebase Storage.
 - Google Drive: almacenamiento de la cuenta del propietario.
 - Dominio: costo anual del cliente, si se agrega uno.
 
-El panel administra telefono, WhatsApp, PDF, Instagram, Maps y los textos
-principales de portada y reservas. Las fotografias siguen siendo assets
-locales del proyecto.
+El panel administra telefono, WhatsApp, dos PDF con sus categorías, Instagram,
+Maps y los textos principales de portada y reservas. Las fotografias siguen
+siendo assets locales del proyecto.
 
 ## Restriccion de la clave web
 

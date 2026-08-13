@@ -22,7 +22,10 @@ class _AdminPageState extends State<AdminPage> {
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
   final _messageController = TextEditingController();
-  final _pdfController = TextEditingController();
+  final _pdfUrl1Controller = TextEditingController();
+  final _pdfCategory1Controller = TextEditingController();
+  final _pdfUrl2Controller = TextEditingController();
+  final _pdfCategory2Controller = TextEditingController();
   final _instagramController = TextEditingController();
   final _mapsController = TextEditingController();
   final _heroTitleController = TextEditingController();
@@ -40,7 +43,10 @@ class _AdminPageState extends State<AdminPage> {
       _passwordController,
       _phoneController,
       _messageController,
-      _pdfController,
+      _pdfUrl1Controller,
+      _pdfCategory1Controller,
+      _pdfUrl2Controller,
+      _pdfCategory2Controller,
       _instagramController,
       _mapsController,
       _heroTitleController,
@@ -99,7 +105,10 @@ class _AdminPageState extends State<AdminPage> {
   void _fill(SiteContent content) {
     _phoneController.text = content.phone;
     _messageController.text = content.whatsappMessage;
-    _pdfController.text = content.pdfUrl;
+    _pdfUrl1Controller.text = content.pdfUrl1;
+    _pdfCategory1Controller.text = content.pdfCategory1;
+    _pdfUrl2Controller.text = content.pdfUrl2;
+    _pdfCategory2Controller.text = content.pdfCategory2;
     _instagramController.text = content.instagramUrl;
     _mapsController.text = content.mapsUrl;
     _heroTitleController.text = content.heroTitle;
@@ -110,7 +119,10 @@ class _AdminPageState extends State<AdminPage> {
   SiteContent _contentFromForm() => SiteContent(
         phone: _phoneController.text,
         whatsappMessage: _messageController.text,
-        pdfUrl: _pdfController.text,
+        pdfUrl1: _pdfUrl1Controller.text,
+        pdfCategory1: _pdfCategory1Controller.text,
+        pdfUrl2: _pdfUrl2Controller.text,
+        pdfCategory2: _pdfCategory2Controller.text,
         instagramUrl: _instagramController.text,
         mapsUrl: _mapsController.text,
         heroTitle: _heroTitleController.text,
@@ -471,7 +483,16 @@ class _AdminPageState extends State<AdminPage> {
           const SizedBox(height: 20),
           _field(_phoneController, 'Teléfono de reservas'),
           _field(_messageController, 'Mensaje de WhatsApp'),
-          _field(_pdfController, 'Enlace compartido del PDF de Drive'),
+          _pdfSection(
+            number: '1',
+            categoryController: _pdfCategory1Controller,
+            urlController: _pdfUrl1Controller,
+          ),
+          _pdfSection(
+            number: '2',
+            categoryController: _pdfCategory2Controller,
+            urlController: _pdfUrl2Controller,
+          ),
           _field(_instagramController, 'Enlace de Instagram'),
           _field(_mapsController, 'Enlace de Google Maps'),
           _field(_heroTitleController, 'Título principal'),
@@ -481,7 +502,29 @@ class _AdminPageState extends State<AdminPage> {
           FilledButton(
               onPressed: _loading ? null : _save,
               child: Text(_loading ? 'Guardando…' : 'Guardar cambios')),
-        ],
+      ],
+    );
+
+  Widget _pdfSection({
+    required String number,
+    required TextEditingController categoryController,
+    required TextEditingController urlController,
+  }) => Card(
+        margin: const EdgeInsets.only(bottom: 14),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('PDF $number',
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              _field(categoryController, 'Categoría del PDF'),
+              _field(urlController, 'Enlace compartido del PDF de Drive'),
+            ],
+          ),
+        ),
       );
 
   Widget _field(TextEditingController controller, String label) => Padding(

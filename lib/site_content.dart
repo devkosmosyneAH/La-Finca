@@ -2,7 +2,10 @@ class SiteContent {
   const SiteContent({
     required this.phone,
     required this.whatsappMessage,
-    required this.pdfUrl,
+    required this.pdfUrl1,
+    required this.pdfCategory1,
+    required this.pdfUrl2,
+    required this.pdfCategory2,
     required this.instagramUrl,
     required this.mapsUrl,
     required this.heroTitle,
@@ -12,7 +15,10 @@ class SiteContent {
 
   final String phone;
   final String whatsappMessage;
-  final String pdfUrl;
+  final String pdfUrl1;
+  final String pdfCategory1;
+  final String pdfUrl2;
+  final String pdfCategory2;
   final String instagramUrl;
   final String mapsUrl;
   final String heroTitle;
@@ -22,7 +28,10 @@ class SiteContent {
   static const defaults = SiteContent(
     phone: '099 721 0017',
     whatsappMessage: 'Hola LA FINCA, quiero consultar disponibilidad.',
-    pdfUrl: '',
+    pdfUrl1: '',
+    pdfCategory1: 'Menú',
+    pdfUrl2: '',
+    pdfCategory2: 'Información',
     instagramUrl: 'https://www.instagram.com/lafinca.spa/',
     mapsUrl: 'https://maps.app.goo.gl/DoZu9bp9NGxzDAvg9',
     heroTitle: 'La Amazonía que\nse disfruta sin\nprisa.',
@@ -39,7 +48,10 @@ class SiteContent {
     return SiteContent(
       phone: value('phone', defaults.phone),
       whatsappMessage: value('whatsappMessage', defaults.whatsappMessage),
-      pdfUrl: value('pdfUrl', defaults.pdfUrl),
+      pdfUrl1: value('pdfUrl1', value('pdfUrl', defaults.pdfUrl1)),
+      pdfCategory1: value('pdfCategory1', defaults.pdfCategory1),
+      pdfUrl2: value('pdfUrl2', defaults.pdfUrl2),
+      pdfCategory2: value('pdfCategory2', defaults.pdfCategory2),
       instagramUrl: value('instagramUrl', defaults.instagramUrl),
       mapsUrl: value('mapsUrl', defaults.mapsUrl),
       heroTitle: value('heroTitle', defaults.heroTitle),
@@ -51,7 +63,12 @@ class SiteContent {
   Map<String, dynamic> toMap() => {
         'phone': phone,
         'whatsappMessage': whatsappMessage,
-        'pdfUrl': pdfUrl,
+        // pdfUrl remains for compatibility with content saved by the old app.
+        'pdfUrl': pdfUrl1,
+        'pdfUrl1': pdfUrl1,
+        'pdfCategory1': pdfCategory1,
+        'pdfUrl2': pdfUrl2,
+        'pdfCategory2': pdfCategory2,
         'instagramUrl': instagramUrl,
         'mapsUrl': mapsUrl,
         'heroTitle': heroTitle,

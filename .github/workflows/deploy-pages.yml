@@ -38,12 +38,16 @@ jobs:
 
       - name: Build web
         env:
-          # Firebase is optional for the public landing page. If configured,
-          # the key enables the admin/content backend; otherwise the app uses
-          # its bundled fallback content.
+          # Firebase web API keys are public client configuration. Prefer an
+          # Actions secret/variable when available; otherwise use the bundled
+          # Firebase web configuration.
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY || vars.FIREBASE_API_KEY }}
         run: |
-          flutter build web --release --base-href "/La-Finca/" --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY"
+          if [ -n "$FIREBASE_API_KEY" ]; then
+            flutter build web --release --base-href "/La-Finca/" --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY"
+          else
+            flutter build web --release --base-href "/La-Finca/"
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -6,6 +6,8 @@ void main() {
     final content = SiteContent.defaults;
 
     expect(content.phone, isNotEmpty);
+    expect(content.pdfCategory1, isNotEmpty);
+    expect(content.pdfCategory2, isNotEmpty);
     expect(content.heroTitle, isNotEmpty);
     expect(content.reservationTitle, isNotEmpty);
   });
@@ -16,7 +18,20 @@ void main() {
 
     expect(restored.phone, original.phone);
     expect(restored.whatsappMessage, original.whatsappMessage);
+    expect(restored.pdfUrl1, original.pdfUrl1);
+    expect(restored.pdfCategory1, original.pdfCategory1);
+    expect(restored.pdfUrl2, original.pdfUrl2);
+    expect(restored.pdfCategory2, original.pdfCategory2);
     expect(restored.heroTitle, original.heroTitle);
     expect(restored.reservationTitle, original.reservationTitle);
+  });
+
+  test('mantiene el PDF antiguo como primer documento', () {
+    final content = SiteContent.fromMap({
+      'pdfUrl': 'https://drive.google.com/old-file',
+    });
+
+    expect(content.pdfUrl1, 'https://drive.google.com/old-file');
+    expect(content.pdfUrl2, isEmpty);
   });
 }

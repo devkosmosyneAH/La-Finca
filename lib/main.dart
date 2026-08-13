@@ -321,8 +321,7 @@ class _HomePageState extends State<HomePage>
                       () => _goTo(_reservasKey)),
                   _outlineButton(
                       'Conocer experiencias', () => _goTo(_experienciasKey)),
-                  if (widget.content.pdfUrl.trim().isNotEmpty)
-                    _outlineButton('Ver menú PDF', _openPdf),
+                  ..._pdfButtons(),
                 ],
               ),
               const SizedBox(height: 36),
@@ -1633,18 +1632,40 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  Future<void> _openPdf() async {
-    final url = widget.content.pdfUrl.trim();
+  List<Widget> _pdfButtons() {
+    final buttons = <Widget>[];
+    if (widget.content.pdfUrl1.trim().isNotEmpty) {
+      buttons.add(_outlineButton(
+        widget.content.pdfCategory1.trim().isEmpty
+            ? 'Ver PDF 1'
+            : widget.content.pdfCategory1,
+        () => _openPdf(widget.content.pdfUrl1, widget.content.pdfCategory1),
+      ));
+    }
+    if (widget.content.pdfUrl2.trim().isNotEmpty) {
+      buttons.add(_outlineButton(
+        widget.content.pdfCategory2.trim().isEmpty
+            ? 'Ver PDF 2'
+            : widget.content.pdfCategory2,
+        () => _openPdf(widget.content.pdfUrl2, widget.content.pdfCategory2),
+      ));
+    }
+    return buttons;
+  }
+
+  Future<void> _openPdf(String rawUrl, String category) async {
+    final url = rawUrl.trim();
+    final label = category.trim().isEmpty ? 'PDF' : category.trim();
     if (url.isEmpty) {
       _showMessage(
-          'Menú PDF', 'Todavía no se ha configurado el enlace del PDF.');
+          label, 'Todavía no se ha configurado el enlace del PDF.');
       return;
     }
     final uri = Uri.tryParse(url);
-    if (uri == null ||
+    if (uri == null || !{'http', 'https'}.contains(uri.scheme) ||
         !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted)
-        _showMessage('Menú PDF', 'No se pudo abrir el enlace del PDF.');
+        _showMessage(label, 'No se pudo abrir el enlace del PDF.');
     }
   }
 
