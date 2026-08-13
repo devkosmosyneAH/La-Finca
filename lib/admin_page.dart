@@ -47,10 +47,19 @@ class _AdminPageState extends State<AdminPage> {
     if (!ContentService.isConfigured) return;
     setState(() => _loading = true);
     try {
-      await ContentService.signIn(
+      final credential = await ContentService.signIn(
         _emailController.text,
         _passwordController.text,
       );
+      final user = credential.user;
+      if (user == null || !user.emailVerified) {
+        if (user != null) await user.sendEmailVerification();
+        await ContentService.signOut();
+        _message(
+          'Debes verificar el correo. Te enviamos un nuevo enlace de verificación.',
+        );
+        return;
+      }
       final content = await ContentService.load();
       _fill(content);
       if (mounted) setState(() => _loggedIn = true);
