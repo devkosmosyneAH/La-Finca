@@ -9,7 +9,7 @@ class DefaultFirebaseOptions {
   // absent from the repository source and local builds without it use local
   // fallback content.
   static const apiKey = String.fromEnvironment('FIREBASE_API_KEY');
-  static const isConfigured = apiKey.isNotEmpty;
+  static bool get isConfigured => apiKey.isNotEmpty;
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: apiKey,
