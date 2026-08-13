@@ -36,7 +36,8 @@ La pagina se publica unicamente mediante GitHub Pages. El workflow de GitHub
 Actions compila Flutter Web y publica el resultado. Firebase no aloja la
 pagina.
 
-El panel se abre en `/admin` dentro de la misma aplicacion Flutter. El acceso
+En GitHub Pages, el panel se abre en `/#/admin` dentro de la misma aplicacion
+Flutter. El acceso
 esta protegido por Firebase Authentication y las escrituras por las reglas de
 Realtime Database.
 
