@@ -2,7 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 
 /// Firebase Web configuration for project `la-finca-1394c`.
 /// These values are intended for the browser and are not service-account
-/// credentials. Firestore rules and Firebase Authentication protect data.
+/// credentials. Realtime Database rules and Firebase Authentication protect
+/// the editable content.
 class DefaultFirebaseOptions {
   static const isConfigured = true;
 
@@ -13,6 +14,7 @@ class DefaultFirebaseOptions {
     projectId: 'la-finca-1394c',
     authDomain: 'la-finca-1394c.firebaseapp.com',
     storageBucket: 'la-finca-1394c.firebasestorage.app',
+    databaseURL: 'https://la-finca-1394c-default-rtdb.firebaseio.com',
   );
 
   static FirebaseOptions get currentPlatform => web;

@@ -5,7 +5,7 @@ La solución está preparada para esta arquitectura:
 ```text
 Página pública Flutter  →  GitHub Pages (sitio estático)
                            ↓
-                    Firebase Firestore
+                  Firebase Realtime Database
                            ↑
 Panel /admin Flutter  →  Firebase Authentication
 
@@ -14,15 +14,16 @@ PDF del menú  ←  enlace público de Google Drive
 
 El panel no almacena el PDF. El propietario pega el enlace compartido de
 Google Drive y la página pública lo usa para el botón `Ver menú PDF`. Esto
-evita usar Firebase Storage.
+evita usar Firebase Storage. Los enlaces y textos se guardan en Realtime
+Database en `site/content`.
 
 ## Conectar Firebase
 
 1. Crear un proyecto en Firebase con la cuenta del propietario.
 2. Activar Authentication → Sign-in method → Email/Password.
 3. Crear un único usuario para el propietario. No activar el registro público.
-4. Crear Firestore Database en modo producción.
-5. Publicar las reglas del archivo `firestore.rules`.
+4. Crear/activar Realtime Database usando la URL del proyecto.
+5. Publicar las reglas del archivo `database.rules.json`.
 6. Instalar FlutterFire CLI si aún no está instalado:
 
    ```bash
@@ -41,7 +42,7 @@ ruta directamente.
 
 La página pública se publica únicamente mediante GitHub Actions en GitHub
 Pages al hacer push a la rama `main`. Firebase se utiliza únicamente para
-Authentication y Firestore del panel.
+Authentication y Realtime Database del panel.
 
 El repositorio no debe contener contraseñas ni claves privadas.
 

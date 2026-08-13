@@ -1,0 +1,21 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "site": {
+      "content": {
+        ".read": true,
+        ".write": "auth != null && auth.token.email_verified == true",
+        ".validate": "newData.hasChildren(['phone', 'whatsappMessage', 'pdfUrl', 'instagramUrl', 'mapsUrl', 'heroTitle', 'heroSubtitle', 'reservationTitle'])",
+        "phone": {".validate": "newData.isString() && newData.val().length <= 40"},
+        "whatsappMessage": {".validate": "newData.isString() && newData.val().length <= 300"},
+        "pdfUrl": {".validate": "newData.isString() && newData.val().length <= 2000"},
+        "instagramUrl": {".validate": "newData.isString() && newData.val().length <= 2000"},
+        "mapsUrl": {".validate": "newData.isString() && newData.val().length <= 2000"},
+        "heroTitle": {".validate": "newData.isString() && newData.val().length <= 300"},
+        "heroSubtitle": {".validate": "newData.isString() && newData.val().length <= 300"},
+        "reservationTitle": {".validate": "newData.isString() && newData.val().length <= 300"}
+      }
+    }
+  }
+}

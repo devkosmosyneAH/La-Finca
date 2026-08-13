@@ -1,5 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 import 'firebase_options.dart';
 import 'site_content.dart';
@@ -11,8 +11,15 @@ class ContentService {
 
   static Future<SiteContent> load() async {
     if (!isConfigured) return SiteContent.defaults;
-    final snapshot = await FirebaseFirestore.instance.doc(documentPath).get();
-    return SiteContent.fromMap(snapshot.data() ?? const {});
+    final snapshot = await FirebaseDatabase.instance.ref(documentPath).get();
+    final raw = snapshot.value;
+    if (raw is Map) {
+      final data = raw.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+      return SiteContent.fromMap(Map<String, dynamic>.from(data));
+    }
+    return SiteContent.defaults;
   }
 
   static Future<UserCredential> signIn(String email, String password) {
@@ -25,9 +32,6 @@ class ContentService {
   static Future<void> signOut() => FirebaseAuth.instance.signOut();
 
   static Future<void> save(SiteContent content) {
-    return FirebaseFirestore.instance.doc(documentPath).set(
-          content.toMap(),
-          SetOptions(merge: true),
-        );
+    return FirebaseDatabase.instance.ref(documentPath).set(content.toMap());
   }
 }
