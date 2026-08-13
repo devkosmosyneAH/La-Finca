@@ -33,8 +33,19 @@ class _AdminPageState extends State<AdminPage> {
   final _reservationTitleController = TextEditingController();
   bool _loading = false;
   bool _loggedIn = false;
+  bool _checkingSession = true;
   bool _obscurePassword = true;
   String? _authError;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!ContentService.isConfigured) {
+      _checkingSession = false;
+    } else {
+      _restoreSession();
+    }
+  }
 
   @override
   void dispose() {
@@ -78,14 +89,55 @@ class _AdminPageState extends State<AdminPage> {
         );
         return;
       }
-      final content = await ContentService.load();
-      _fill(content);
-      if (mounted) setState(() => _loggedIn = true);
+      await _enterEditor();
     } catch (error) {
       if (mounted) setState(() => _authError = _authMessage(error));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _restoreSession() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      await user.reload();
+      final refreshedUser = FirebaseAuth.instance.currentUser;
+      if (refreshedUser == null || !refreshedUser.emailVerified) {
+        await ContentService.signOut();
+        return;
+      }
+      await _enterEditor();
+    } catch (_) {
+      // A stale session must never bypass the login screen.
+      await ContentService.signOut();
+    } finally {
+      if (mounted) setState(() => _checkingSession = false);
+    }
+  }
+
+  Future<void> _enterEditor() async {
+    // A temporary database read failure must not discard a valid login.
+    final content = await ContentService.load().catchError(
+      (_) => SiteContent.defaults,
+    );
+    _fill(content);
+    if (mounted) {
+      setState(() {
+        _loggedIn = true;
+        _checkingSession = false;
+      });
+    }
+  }
+
+  Future<void> _logout() async {
+    await ContentService.signOut();
+    if (!mounted) return;
+    setState(() {
+      _loggedIn = false;
+      _passwordController.clear();
+      _authError = null;
+    });
   }
 
   Future<void> _save() async {
@@ -158,6 +210,7 @@ class _AdminPageState extends State<AdminPage> {
   @override
   Widget build(BuildContext context) {
     if (!ContentService.isConfigured) return _adminShell(_setupNotice());
+    if (_checkingSession) return _adminShell(_sessionLoading());
     if (_loggedIn) return _adminShell(_editor());
     return _loginView();
   }
@@ -169,6 +222,12 @@ class _AdminPageState extends State<AdminPage> {
           foregroundColor: Colors.white,
           title: const Text('Administración · LA FINCA'),
           actions: [
+            if (_loggedIn)
+              IconButton(
+                onPressed: _loading ? null : _logout,
+                tooltip: 'Cerrar sesión',
+                icon: const Icon(Icons.logout_rounded),
+              ),
             TextButton(
               onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
               child: const Text('Ver página pública',
@@ -438,6 +497,18 @@ class _AdminPageState extends State<AdminPage> {
       ),
     );
   }
+
+  Widget _sessionLoading() => const Padding(
+        padding: EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Comprobando sesión…'),
+          ],
+        ),
+      );
 
   Widget _developerCredit({required bool dark}) => TextButton.icon(
         onPressed: _openDeveloper,
