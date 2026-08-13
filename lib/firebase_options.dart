@@ -5,10 +5,14 @@ import 'package:firebase_core/firebase_core.dart';
 /// credentials. Realtime Database rules and Firebase Authentication protect
 /// the editable content.
 class DefaultFirebaseOptions {
-  static const isConfigured = true;
+  // Injected only by GitHub Actions with --dart-define. It is intentionally
+  // absent from the repository source and local builds without it use local
+  // fallback content.
+  static const apiKey = String.fromEnvironment('FIREBASE_API_KEY');
+  static const isConfigured = apiKey.isNotEmpty;
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'REDACTED_FIREBASE_API_KEY',
+    apiKey: apiKey,
     appId: '1:1089877198747:web:17fca0db100be1ab9f033e',
     messagingSenderId: '1089877198747',
     projectId: 'la-finca-1394c',

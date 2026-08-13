@@ -37,7 +37,11 @@ jobs:
         run: flutter pub get
 
       - name: Build web
-        run: flutter build web --release --base-href "/La-Finca/"
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+        run: |
+          test -n "$FIREBASE_API_KEY"
+          flutter build web --release --base-href "/La-Finca/" --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
