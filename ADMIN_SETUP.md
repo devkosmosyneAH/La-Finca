@@ -3,7 +3,7 @@
 La solución está preparada para esta arquitectura:
 
 ```text
-Página pública Flutter  →  Firebase Hosting (sitio estático)
+Página pública Flutter  →  GitHub Pages (sitio estático)
                            ↓
                     Firebase Firestore
                            ↑
@@ -39,16 +39,11 @@ ruta directamente.
 
 ## Publicar la página
 
-La versión actual está publicada en el sitio Firebase Hosting del proyecto
-`la-finca-1394c`. Para futuras versiones:
+La página pública se publica únicamente mediante GitHub Actions en GitHub
+Pages al hacer push a la rama `main`. Firebase se utiliza únicamente para
+Authentication y Firestore del panel.
 
-```bash
-flutter build web --release --base-href "/"
-firebase deploy --project la-finca-1394c --only hosting
-```
-
-El proyecto Firebase y el dominio deben pertenecer al propietario. El
-repositorio no debe contener contraseñas ni claves privadas.
+El repositorio no debe contener contraseñas ni claves privadas.
 
 ## Uso del PDF
 
@@ -64,8 +59,7 @@ archivo y crear uno nuevo.
 
 ## Costos y alcance
 
-- Firebase Hosting: cuota gratuita para el sitio estático; revisar el consumo
-  del proyecto desde la consola.
+- GitHub Pages: hosting del sitio estático mediante el workflow del repositorio.
 - Firestore/Auth: consumo muy bajo para este proyecto; la cuenta y cualquier
   facturación deben ser del propietario.
 - Google Drive: usa el almacenamiento de la cuenta del propietario.
