@@ -38,12 +38,11 @@ jobs:
 
       - name: Build web
         env:
-          # Firebase web API keys are client-side identifiers. Prefer a secret,
-          # but allow an Actions variable when repository-secret management is
-          # unavailable. The key is never stored in the repository.
+          # Firebase is optional for the public landing page. If configured,
+          # the key enables the admin/content backend; otherwise the app uses
+          # its bundled fallback content.
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY || vars.FIREBASE_API_KEY }}
         run: |
-          test -n "$FIREBASE_API_KEY"
           flutter build web --release --base-href "/La-Finca/" --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY"
 
       - name: Upload Pages artifact
