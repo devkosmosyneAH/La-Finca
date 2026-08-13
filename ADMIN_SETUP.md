@@ -26,9 +26,10 @@ Cloud Functions.
 4. Publicar las reglas de `database.rules.json`.
 5. La aplicacion guarda el contenido en `site/content`.
 
-La clave web se inyecta durante la compilacion mediante
-`FIREBASE_API_KEY`. No se deben subir al repositorio contrasenas, tokens,
-cuentas de servicio ni claves privadas.
+La clave web se inyecta durante la compilacion mediante `FIREBASE_API_KEY`.
+En GitHub debe guardarse dentro del entorno `github-pages` (no crear un
+entorno llamado `FIREBASE_API_KEY`). No se deben subir al repositorio
+contrasenas, tokens, cuentas de servicio ni claves privadas.
 
 ## Publicacion
 
