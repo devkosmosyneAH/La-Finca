@@ -1,0 +1,16 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /site/content {
+      // The public landing page needs to read the published content.
+      allow read: if true;
+
+      // The owner account must be created manually in Firebase Auth; public
+      // sign-up must remain disabled. Require a verified session for writes.
+      allow create, update: if request.auth != null
+        && request.auth.token.email_verified == true;
+      allow delete: if false;
+    }
+  }
+}

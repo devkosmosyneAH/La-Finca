@@ -1,7 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-void main() => runApp(const LaFincaApp());
+import 'admin_page.dart';
+import 'content_service.dart';
+import 'firebase_options.dart';
+import 'site_content.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (DefaultFirebaseOptions.isConfigured) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
+  runApp(const LaFincaApp());
+}
 
 class LaFincaApp extends StatelessWidget {
   const LaFincaApp({super.key});
@@ -33,13 +47,34 @@ class LaFincaApp extends StatelessWidget {
               TextButton.styleFrom(tapTargetSize: MaterialTapTargetSize.padded),
         ),
       ),
-      home: const HomePage(),
+      onGenerateRoute: (settings) {
+        if (settings.name == '/admin') {
+          return MaterialPageRoute(builder: (_) => const AdminPage());
+        }
+        return MaterialPageRoute(builder: (_) => const PublicHome());
+      },
+    );
+  }
+}
+
+class PublicHome extends StatelessWidget {
+  const PublicHome({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<SiteContent>(
+      future: ContentService.load().catchError((_) => SiteContent.defaults),
+      builder: (context, snapshot) => HomePage(
+        content: snapshot.data ?? SiteContent.defaults,
+      ),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required this.content});
+
+  final SiteContent content;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -196,8 +231,8 @@ class _HomePageState extends State<HomePage>
           const SizedBox(width: 8),
           GestureDetector(
             onTap: _call,
-            child: const Text(
-              'Reservas: 099 721 0017',
+            child: Text(
+              'Reservas: ${widget.content.phone}',
               style: TextStyle(
                   color: Colors.white,
                   fontSize: 12,
@@ -259,7 +294,7 @@ class _HomePageState extends State<HomePage>
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 720),
                 child: Text(
-                  'La Amazonía que\nse disfruta sin\nprisa.',
+                  widget.content.heroTitle,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: titleSize,
@@ -270,8 +305,8 @@ class _HomePageState extends State<HomePage>
                 ),
               ),
               const SizedBox(height: 22),
-              const Text(
-                'PISCINAS · SPA · GLAMPING · GASTRONOMÍA · EVENTOS',
+              Text(
+                widget.content.heroSubtitle,
                 style: TextStyle(
                     color: Color(0xFFF1D6A2),
                     fontSize: 16,
@@ -286,6 +321,8 @@ class _HomePageState extends State<HomePage>
                       () => _goTo(_reservasKey)),
                   _outlineButton(
                       'Conocer experiencias', () => _goTo(_experienciasKey)),
+                  if (widget.content.pdfUrl.trim().isNotEmpty)
+                    _outlineButton('Ver menú PDF', _openPdf),
                 ],
               ),
               const SizedBox(height: 36),
@@ -1391,7 +1428,7 @@ class _HomePageState extends State<HomePage>
               children: [
                 _eyebrow('HAZ TU RESERVA'),
                 const SizedBox(height: 14),
-                Text('Tu próxima experiencia\nempieza con un mensaje.',
+                Text(widget.content.reservationTitle,
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: mobile ? 34 : 39,
@@ -1406,7 +1443,7 @@ class _HomePageState extends State<HomePage>
                 Wrap(spacing: 14, runSpacing: 12, children: [
                   _primaryButton(
                       'Reservar por WhatsApp', Icons.chat_rounded, _whatsapp),
-                  _outlineButton('Llamar al 099 721 0017', _call)
+                  _outlineButton('Llamar al ${widget.content.phone}', _call)
                 ]),
                 const SizedBox(height: 24),
                 const Text(
@@ -1552,7 +1589,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Future<void> _openInstagram() async {
-    final uri = Uri.parse('https://www.instagram.com/lafinca.spa/');
+    final uri = Uri.parse(widget.content.instagramUrl);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
         mounted) {
       _showMessage('Instagram',
@@ -1567,7 +1604,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Future<void> _openMaps() async {
-    final uri = Uri.parse('https://maps.app.goo.gl/DoZu9bp9NGxzDAvg9');
+    final uri = Uri.parse(widget.content.mapsUrl);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
         mounted) {
       _showMessage('Ubicación',
@@ -1576,8 +1613,11 @@ class _HomePageState extends State<HomePage>
   }
 
   Future<void> _whatsapp() async {
-    final uri = Uri.parse(
-        'https://wa.me/593997210017?text=Hola%20LA%20FINCA%2C%20quiero%20consultar%20disponibilidad.');
+    final uri = Uri.https(
+      'wa.me',
+      '/${_internationalPhone()}',
+      {'text': widget.content.whatsappMessage},
+    );
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
         mounted) {
       _showMessage(
@@ -1586,11 +1626,31 @@ class _HomePageState extends State<HomePage>
   }
 
   Future<void> _call() async {
-    final uri = Uri.parse('tel:+593997210017');
+    final uri = Uri.parse('tel:+${_internationalPhone()}');
     if (!await launchUrl(uri) && mounted) {
       _showMessage(
           'Reservas', 'Llama al 099 721 0017 para consultar disponibilidad.');
     }
+  }
+
+  Future<void> _openPdf() async {
+    final url = widget.content.pdfUrl.trim();
+    if (url.isEmpty) {
+      _showMessage(
+          'Menú PDF', 'Todavía no se ha configurado el enlace del PDF.');
+      return;
+    }
+    final uri = Uri.tryParse(url);
+    if (uri == null ||
+        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted)
+        _showMessage('Menú PDF', 'No se pudo abrir el enlace del PDF.');
+    }
+  }
+
+  String _internationalPhone() {
+    final digits = widget.content.phone.replaceAll(RegExp(r'[^0-9]'), '');
+    return digits.startsWith('593') ? digits : '593$digits';
   }
 
   void _showMessage(String title, String message) {
