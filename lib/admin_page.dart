@@ -439,7 +439,7 @@ class _AdminPageState extends State<AdminPage> {
                   style: TextStyle(
                       color: dark ? const Color(0xFFC8D6CD) : forest)),
               const TextSpan(
-                text: 'DEVKOSMYNE',
+                text: 'Devkosmosyne',
                 style: TextStyle(
                     color: Color(0xFFE6C68A),
                     letterSpacing: 1.2,

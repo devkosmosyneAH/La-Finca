@@ -1518,7 +1518,7 @@ class _HomePageState extends State<HomePage>
         TextSpan(children: [
           TextSpan(text: 'Desarrollado por  '),
           TextSpan(
-              text: 'DEVKOSMYNE',
+              text: 'Devkosmosyne',
               style: TextStyle(
                   color: Color(0xFFE6C68A),
                   letterSpacing: 1.2,
