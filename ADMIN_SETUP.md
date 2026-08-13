@@ -1,93 +1,74 @@
-# LA FINCA: configuración del panel
+# LA FINCA: configuracion del panel
 
-La solución está preparada para esta arquitectura:
+La aplicacion usa esta arquitectura:
 
 ```text
-Página pública Flutter  →  GitHub Pages (sitio estático)
-                           ↓
-                  Firebase Realtime Database
-                           ↑
-Panel /admin Flutter  →  Firebase Authentication
-
-PDF del menú  ←  enlace público de Google Drive
+Aplicacion publica Flutter -> GitHub Pages
+                              |
+                              v
+                    Firebase Realtime Database
+                              ^
+Panel /admin Flutter ---------|
+        |
+        +--> Firebase Authentication (Email/Password)
+        +--> Google Drive para el enlace publico del PDF
 ```
 
-El panel no almacena el PDF. El propietario pega el enlace compartido de
-Google Drive y la página pública lo usa para el botón `Ver menú PDF`. Esto
-evita usar Firebase Storage. Los enlaces y textos se guardan en Realtime
-Database en `site/content`.
+Firebase se usa unicamente para Authentication y Realtime Database. No se
+usa Firebase Hosting, Firestore, Firebase Storage, Analytics, Messaging ni
+Cloud Functions.
 
-## Conectar Firebase
+## Configuracion de Firebase
 
-1. Crear un proyecto en Firebase con la cuenta del propietario.
-2. Activar Authentication → Sign-in method → Email/Password.
-3. Crear un único usuario para el propietario. No activar el registro público.
-4. Crear/activar Realtime Database usando la URL del proyecto.
-5. Publicar las reglas del archivo `database.rules.json`.
-6. Instalar FlutterFire CLI si aún no está instalado:
+1. Activar Authentication -> Sign-in method -> Email/Password.
+2. Crear un unico usuario para el propietario. No activar el registro publico.
+3. Crear o activar Realtime Database.
+4. Publicar las reglas de `database.rules.json`.
+5. La aplicacion guarda el contenido en `site/content`.
 
-   ```bash
-   dart pub global activate flutterfire_cli
-   flutterfire configure
-   ```
+La clave web se inyecta durante la compilacion mediante
+`FIREBASE_API_KEY`. No se deben subir al repositorio contrasenas, tokens,
+cuentas de servicio ni claves privadas.
 
-7. Reemplazar `lib/firebase_options.dart` con el archivo generado por
-   `flutterfire configure` no es necesario para este repositorio; el archivo
-   usa `FIREBASE_API_KEY` como variable de compilación.
-8. En GitHub, ir a Settings → Secrets and variables → Actions → New repository
-   secret y crear `FIREBASE_API_KEY` con la clave web del proyecto. Si GitHub
-   muestra "Failed to add secret", puede crearse como variable en `Settings >
-   Secrets and variables > Actions > Variables`; el workflow acepta ambas
-   opciones porque la clave web de Firebase es un identificador que termina en
-   el JavaScript público.
+## Publicacion
 
-El panel queda disponible en `/admin`. La regla `web/_redirects` permite que
-Cloudflare Pages entregue la aplicación Flutter también cuando se abre esa
-ruta directamente.
+La pagina se publica unicamente mediante GitHub Pages. El workflow de GitHub
+Actions compila Flutter Web y publica el resultado. Firebase no aloja la
+pagina.
 
-## Publicar la página
-
-La página pública se publica únicamente mediante GitHub Actions en GitHub
-Pages al hacer push a la rama `main`. Firebase se utiliza únicamente para
-Authentication y Realtime Database del panel.
-
-El repositorio no debe contener contraseñas ni claves privadas.
+El panel se abre en `/admin` dentro de la misma aplicacion Flutter. El acceso
+esta protegido por Firebase Authentication y las escrituras por las reglas de
+Realtime Database.
 
 ## Uso del PDF
 
-El propietario debe compartir el PDF en Google Drive como:
+El propietario comparte el PDF en Google Drive como:
 
 ```text
-Cualquier persona con el enlace → Lector
+Cualquier persona con el enlace -> Lector
 ```
 
-Luego pega ese enlace en `/admin`. Para conservar el mismo enlace, debe
-reemplazar el contenido del archivo existente en Drive en lugar de borrar el
-archivo y crear uno nuevo.
+Luego pega ese enlace en `/admin`. El PDF no se guarda en Firebase Storage.
 
 ## Costos y alcance
 
-- GitHub Pages: hosting del sitio estático mediante el workflow del repositorio.
-- Firestore/Auth: consumo muy bajo para este proyecto; la cuenta y cualquier
-  facturación deben ser del propietario.
-- Google Drive: usa el almacenamiento de la cuenta del propietario.
-- Dominio: costo anual del cliente.
+- GitHub Pages: alojamiento del sitio estatico.
+- Firebase Authentication y Realtime Database: consumo bajo para este sitio.
+- Google Drive: almacenamiento de la cuenta del propietario.
+- Dominio: costo anual del cliente, si se agrega uno.
 
-El panel actual administra teléfono, WhatsApp, PDF, Instagram, Maps y los
-textos principales de portada y reservas. Las fotos siguen siendo assets
-locales hasta implementar una galería editable.
+El panel administra telefono, WhatsApp, PDF, Instagram, Maps y los textos
+principales de portada y reservas. Las fotografias siguen siendo assets
+locales del proyecto.
 
-## Seguridad de la clave web
+## Restriccion de la clave web
 
-La configuración Firebase del navegador necesita una API key pública para
-inicializar el SDK; esa clave no concede por sí sola acceso de escritura. El
-acceso real está protegido por Authentication y las reglas de Realtime
-Database. La clave debe restringirse por HTTP referrers a:
+Restringir la API key por HTTP referrer a:
 
 ```text
 https://devkosmosyneah.github.io/*
 http://localhost:*/
 ```
 
-Y debe permitirse únicamente para las APIs Firebase necesarias. No se deben
-subir al repositorio service accounts, claves privadas ni tokens.
+Permitir solamente las APIs necesarias para Firebase Authentication y
+Realtime Database.

@@ -17,7 +17,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1089877198747',
     projectId: 'la-finca-1394c',
     authDomain: 'la-finca-1394c.firebaseapp.com',
-    storageBucket: 'la-finca-1394c.firebasestorage.app',
     databaseURL: 'https://la-finca-1394c-default-rtdb.firebaseio.com',
   );
 
