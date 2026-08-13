@@ -3,7 +3,7 @@
 La solución está preparada para esta arquitectura:
 
 ```text
-Página pública Flutter  →  Cloudflare Pages (sitio estático)
+Página pública Flutter  →  Firebase Hosting (sitio estático)
                            ↓
                     Firebase Firestore
                            ↑
@@ -39,13 +39,15 @@ ruta directamente.
 
 ## Publicar la página
 
-En Cloudflare Pages usar:
+La versión actual está publicada en el sitio Firebase Hosting del proyecto
+`la-finca-1394c`. Para futuras versiones:
 
-- Framework: Flutter / sitio estático
-- Build command: `flutter build web --release --base-href "/"`
-- Output directory: `build/web`
+```bash
+flutter build web --release --base-href "/"
+firebase deploy --project la-finca-1394c --only hosting
+```
 
-La cuenta de Cloudflare y el dominio deben pertenecer al propietario. El
+El proyecto Firebase y el dominio deben pertenecer al propietario. El
 repositorio no debe contener contraseñas ni claves privadas.
 
 ## Uso del PDF
@@ -62,7 +64,8 @@ archivo y crear uno nuevo.
 
 ## Costos y alcance
 
-- Cloudflare Pages: plan gratuito para el sitio estático.
+- Firebase Hosting: cuota gratuita para el sitio estático; revisar el consumo
+  del proyecto desde la consola.
 - Firestore/Auth: consumo muy bajo para este proyecto; la cuenta y cualquier
   facturación deben ser del propietario.
 - Google Drive: usa el almacenamiento de la cuenta del propietario.
